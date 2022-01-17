@@ -43,7 +43,7 @@
             </ul>
         </section>
         <div @keydown.enter="send($event)"
-             ref="input" class="input"
+             ref="input" class="input input-message"
              @paste="handlePaste"
              draggable="false"
              title="Enter发送，Ctrl+Enter换行"
@@ -53,6 +53,7 @@
              onmouseout="this.title = this.getAttribute('org_title');"
              contenteditable="true">
         </div>
+        <button @click="send($event)" class="send-btn">{{ $t('common.send') }}</button>
         <vue-context ref="menu" :lazy="true">
             <li>
                 <a @click.prevent="handlePaste($event, 'menu')">
@@ -203,9 +204,16 @@ export default {
             //
 
             let input = this.$refs['input'];
-            let message = input.innerText.trim();
+            let message;
+            if(input.innerHTML.toString().includes("<img")){
+                message = input.innerHTML.trim();
+            }else{
+                message = input.innerText.trim();
+            }
             let conversation = this.conversationInfo.conversation;
-
+            // console.log("input.innerText", input.innerText)
+            // console.log("input.innerHTML", input.innerHTML)
+            // return;
             if (
                 !conversation
                 || !this.canisend()
@@ -255,7 +263,6 @@ export default {
                     img.parentNode.removeChild(img);
                 });
             }
-            message = input.innerText.trim();
             message = message.replace(/<br>/g, '\n')
                 .replace(/<div>/g, '\n')
                 .replace(/<\/div>/g, '')
@@ -760,6 +767,28 @@ i:hover {
     color: #34b7f1;
 }
 
+.input-message{
+    position: relative;
+}
+.send-btn{
+    position: absolute;
+    bottom: 15px;
+    right: 20px;
+    padding: 8px 12px;
+    background-color: #4168e0;
+    border-radius: 5px;
+    border: 1px solid #4168e0;
+    color: white;
+    cursor: pointer;
+}
+.send-btn:hover{
+    background-color: #5f77bd;
+    border: 1px solid #5f77bd;
+}
+.send-btn:active{
+    background-color: #2b57e0;
+    border: 1px solid #2b57e0;
+}
 </style>
 
 <style lang="css">
