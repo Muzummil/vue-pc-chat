@@ -633,7 +633,7 @@ export default {
         scrollToBottom(){
             let messageListElement = this.$refs['conversationMessageList'];
             if(messageListElement){
-                messageListElement.scroll({top: messageListElement.scrollHeight, left: 0, behavior: 'smooth'})
+                messageListElement.scroll({top: messageListElement.scrollHeight + 100000, left: 0, behavior: 'smooth'})
             }
         }
     },
@@ -674,14 +674,12 @@ export default {
                     ev.reply('inviteConferenceParticipantCancel')
                 });
         });
-        if (this.sharedConversationState.shouldAutoScrollToBottom) {
-            let messageListElement = this.$refs['conversationMessageList'];
-            if(messageListElement){
-                messageListElement.scroll({top: messageListElement.scrollHeight, left: 0, behavior: 'auto'})
-            }
-        } else {
-            // 用户滑动到上面之后，收到新消息，不自动滑动到最下面
-        }
+        this.scrollToBottom();
+        // if (this.sharedConversationState.shouldAutoScrollToBottom) {
+        //     this.scrollToBottom();
+        // } else {
+        //     // 用户滑动到上面之后，收到新消息，不自动滑动到最下面
+        // }
     },
 
     beforeDestroy() {
@@ -692,10 +690,9 @@ export default {
     },
 
     beforeUpdate(){
-        if(this.sharedConversationState.shouldAutoScrollToBottom && !this.showScrollButton){
+        console.log("BEFORECONV", this.sharedConversationState.forceScrollToBottom)
+        if(this.sharedConversationState.forceScrollToBottom){
             this.scrollToBottom();
-            let messageListElement = this.$refs['conversationMessageList'];
-            messageListElement.scroll({top: messageListElement.scrollHeight, left: 0, behavior: 'smooth'})
         }
     },
     updated() {
@@ -715,6 +712,7 @@ export default {
             this.showConversationInfo = false;
         }
         this.conversationInfo = this.sharedConversationState.currentConversationInfo;
+        this.sharedConversationState.forceScrollToBottom = false;
     },
 
     computed: {

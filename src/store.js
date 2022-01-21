@@ -446,6 +446,7 @@ let store = {
         }
         conversationState.currentConversationInfo = conversationInfo;
         conversationState.shouldAutoScrollToBottom = true;
+        conversationState.forceScrollToBottom = true;
         conversationState.currentConversationMessageList.length = 0;
         this._loadCurrentConversationMessages();
 
@@ -1558,6 +1559,7 @@ let store = {
             return;
         }
         let count = 0;
+        console.log("BEFORETRAY", conversationState.conversationInfoList)
         conversationState.conversationInfoList.forEach(info => {
             if (info.isSilent) {
                 return;

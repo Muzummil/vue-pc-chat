@@ -668,7 +668,7 @@ const createMainWindow = async () => {
         if (!fileWindow) {
             let win = createWindow(args.url, 800, 730, 640, 400, true, true);
 
-            win.webContents.openDevTools();
+            // win.webContents.openDevTools();
             win.on('close', () => {
                 fileWindow = null;
             });
@@ -689,7 +689,7 @@ const createMainWindow = async () => {
             let win = createWindow(url, 700, 850, 700, 850, false, false);
             compositeMessageWindows.set(messageUid, win)
 
-            win.webContents.openDevTools();
+            // win.webContents.openDevTools();
             win.on('close', () => {
                 compositeMessageWindows.delete(messageUid);
             });

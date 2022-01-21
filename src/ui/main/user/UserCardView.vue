@@ -17,7 +17,7 @@
                         <input @click.stop="" type="text"
                                v-model="displayName"
                                @keyup.enter="updateFriendName"
-                               placeholder="$t('common.name')"/>
+                               :placeholder="$t('common.name')"/>
                     </div>
                 </li>
                 <!-- <li>
