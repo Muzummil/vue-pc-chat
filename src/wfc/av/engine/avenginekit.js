@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021 Panda DB Chat. All rights reserved.
  */
+import VideoProfile from './videoProfile'
 
 export default class WfcAVEngineKit {
     /**
@@ -29,4 +30,5 @@ export default class WfcAVEngineKit {
     static DISABLE_DUAL_STREAM = false;
     // 是否默认使用大流
     static DEFAULT_USE_MAIN_VIDEO = true;
+    static VIDEO_PROFILE = VideoProfile.VPDEFAULT;
 }

@@ -31,6 +31,7 @@ export default class AddGroupMemberNotification extends GroupNotificationContent
             notifyStr = '您邀请:';
         } else {
             notifyStr = wfc.getGroupMemberDisplayName(this.groupId, this.invitor) + '邀请:';
+            
         }
 
         let membersStr = '';

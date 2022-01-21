@@ -21,7 +21,7 @@
     "send_request_tip": "向{0}發送好球請求",
     "accepted": "已添加",
     "sent": "已發送",
-    "denied": "已拒絕",
+    "denied": "已拒绝",
     "im": "我是",
     "intro": "你好",
     "addFriend": "添加好友",
@@ -167,7 +167,9 @@
     "month_12": "十二月",
     "wfc_id": "Panda號",
     "name": "昵称",
-    "nameSearch": "搜索昵称"
+    "nameSearch": "搜索昵称",
+    "reject": "拒绝",
+    "reason": "打招呼"
   },
   "misc": {
     "beijing": "北京",
