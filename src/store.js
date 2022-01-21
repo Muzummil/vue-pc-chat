@@ -1052,18 +1052,19 @@ let store = {
     },
 
     _loadFriendRequest() {
-        let incomingRequests = wfc.getIncommingFriendRequest()
-        let requests = incomingRequests;
-        let outgoingRequests = wfc.getOutgoingFriendRequest();
-        // 当针对同一个人，有邀请(out)和被邀请（in)，过滤掉邀请
-        outgoingRequests.forEach(or => {
-            let index = incomingRequests.findIndex(ir => {
-                return or.target === ir.target;
-            })
-            if (index === -1) {
-                requests.push(or);
-            }
-        })
+        let requests = wfc.getIncommingFriendRequest();
+        // let incomingRequests = wfc.getIncommingFriendRequest()
+        // let requests = incomingRequests;
+        // let outgoingRequests = wfc.getOutgoingFriendRequest();
+        // // 当针对同一个人，有邀请(out)和被邀请（in)，过滤掉邀请
+        // outgoingRequests.forEach(or => {
+        //     let index = incomingRequests.findIndex(ir => {
+        //         return or.target === ir.target;
+        //     })
+        //     if (index === -1) {
+        //         requests.push(or);
+        //     }
+        // })
 
         requests.sort((a, b) => numberValue(b.timestamp) - numberValue(a.timestamp))
         requests = requests.length >= 20 ? requests.slice(0, 20) : requests;
@@ -1357,7 +1358,7 @@ let store = {
         }
         groupName = groupName.substr(0, groupName.length - 1);
 
-        wfc.createGroup(null, GroupType.Restricted, groupName, null, null, groupMemberIds, null, [0], null,
+        wfc.createGroup(null, GroupType.Normal, groupName, null, null, groupMemberIds, null, [0], null,
             (groupId) => {
                 this._loadDefaultConversationList();
                 let conversation = new Conversation(ConversationType.Group, groupId, 0)
@@ -1563,8 +1564,24 @@ let store = {
             }
             let unreadCount = info.unreadCount;
             count += unreadCount.unread;
+            
         });
+        if(count > 0){
+            this.playNotificationSound();
+        }
+        console.log("UPDATETRAY", count)
         ipcRenderer.send('update-badge', count)
+    },
+
+    playNotificationSound(){
+        let audio = new Audio("https://chat-admin-pannel.s3.ap-south-1.amazonaws.com/notification-sound.mp3");
+        audio.play();
+        setTimeout(() => {
+            if(audio){
+                audio.pause();
+                audio.currentTime = 0;
+            }
+        }, 600)
     }
 }
 

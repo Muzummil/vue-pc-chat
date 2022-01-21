@@ -19,8 +19,11 @@
                     </div>
                 </li>
                 <li>
-                    <label>{{ $t('common.area') }}</label>
-                    <p>{{ $t('common.unknown') }}</p>
+                    <label>{{ $t('common.reason') }}</label>
+
+                    <p v-if="sharedStateContact.currentFriendRequest.reason">{{ sharedStateContact.currentFriendRequest.reason }}</p>
+                    <p v-else>{{ $t('friend_request.im') + sharedStateContact.currentFriendRequest._target.displayName }}</p>
+
                 </li>
                 <!-- <li>
                     <label>{{ $t('common.label') }}</label>

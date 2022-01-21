@@ -26,7 +26,7 @@
                         <p>{{ $t('conversation.drag_to_send_to', [conversationTitle]) }}</p>
                     </div>
                 </div>
-                <div ref="conversationMessageList" class="conversation-message-list" v-on:scroll="onScroll"
+                <div ref="conversationMessageList" class="conversation-message-list chat-list-container" v-on:scroll="onScroll"
                      infinite-wrapper>
                     <infinite-loading :identifier="loadingIdentifier" force-use-infinite-wrapper direction="top"
                                       @infinite="infiniteHandler">
@@ -51,6 +51,10 @@
                                 v-else/>
                         </li>
                     </ul>
+                </div>
+                <div v-if="checkShowScrollBtnComp" @click="scrollToBottom" class="scroll-bottom-btn">
+                    <img src="../../../assets/images/scroll-down.svg">
+                    <!-- <i class="icon-ion-ios-arrow-round-down"></i> -->
                 </div>
                 <div v-if="sharedConversationState.inputtingUser" class="inputting-container">
                     <img class="avatar" :src="sharedConversationState.inputtingUser.portrait"/>
@@ -184,6 +188,8 @@ export default {
             dragAndDropEnterCount: 0,
             // FIXME 选中一个会话，然后切换到其他page，比如联系人，这时该会话收到新消息或发送消息，会导致新收到/发送的消息的界面错乱，尚不知道原因，但这么做能解决。
             fixTippy: false,
+            messageListContainerScrollHeight: 0,
+            showScrollButton:  false
         };
     },
 
@@ -278,8 +284,28 @@ export default {
         isNotificationMessage(message) {
             return message && message.messageContent instanceof NotificationMessageContent;
         },
+        checkShowScrollBtn() {
+            let messageListContainerElement = this.$refs['conversationMessageList'];
+            if(messageListContainerElement){
+                console.log(messageListContainerElement.offsetHeight,  messageListContainerElement.scrollTop, messageListContainerElement.scrollHeight)
+            }
+            if( messageListContainerElement && (messageListContainerElement.offsetHeight + messageListContainerElement.scrollTop) < messageListContainerElement.scrollHeight - 400){
+                this.showScrollButton = true; 
+            }else{
+                this.showScrollButton = false; 
+            }
+        },
 
         onScroll(e) {
+            // this.messageListContainerScrollHeight = this.$refs['conversationMessageList'].scrollHeight;
+            // console.log("current SH", this.messageListContainerScrollHeight);
+            this.checkShowScrollBtn();
+            // if(this.$refs['conversationMessageList'].scrollHeight > 500){
+            //     this.messageListContainerScrollHeight = this.$refs['conversationMessageList'].scrollHeight;
+            // }else{
+            //     this.messageListContainerScrollHeight = 0;
+            // }
+            console.log(this.messageListContainerScrollHeight)
             // hide tippy userCard
             for (const popper of document.querySelectorAll('.tippy-popper')) {
                 const instance = popper._tippy;
@@ -604,6 +630,12 @@ export default {
                 store.playVoice(null)
             })
         },
+        scrollToBottom(){
+            let messageListElement = this.$refs['conversationMessageList'];
+            if(messageListElement){
+                messageListElement.scroll({top: messageListElement.scrollHeight, left: 0, behavior: 'smooth'})
+            }
+        }
     },
 
     mounted() {
@@ -642,6 +674,14 @@ export default {
                     ev.reply('inviteConferenceParticipantCancel')
                 });
         });
+        if (this.sharedConversationState.shouldAutoScrollToBottom) {
+            let messageListElement = this.$refs['conversationMessageList'];
+            if(messageListElement){
+                messageListElement.scroll({top: messageListElement.scrollHeight, left: 0, behavior: 'auto'})
+            }
+        } else {
+            // 用户滑动到上面之后，收到新消息，不自动滑动到最下面
+        }
     },
 
     beforeDestroy() {
@@ -651,16 +691,17 @@ export default {
         this.$eventBus.$off('forward-fav')
     },
 
+    beforeUpdate(){
+        if(this.sharedConversationState.shouldAutoScrollToBottom && !this.showScrollButton){
+            this.scrollToBottom();
+            let messageListElement = this.$refs['conversationMessageList'];
+            messageListElement.scroll({top: messageListElement.scrollHeight, left: 0, behavior: 'smooth'})
+        }
+    },
     updated() {
         this.popupItem = this.$refs['setting'];
         // refer to http://iamdustan.com/smoothscroll/
         console.log('conversationView updated', this.sharedConversationState.shouldAutoScrollToBottom)
-        if (this.sharedConversationState.shouldAutoScrollToBottom) {
-            let messageListElement = this.$refs['conversationMessageList'];
-            messageListElement.scroll({top: messageListElement.scrollHeight, left: 0, behavior: 'auto'})
-        } else {
-            // 用户滑动到上面之后，收到新消息，不自动滑动到最下面
-        }
         if (this.sharedConversationState.currentConversationInfo) {
             if (!this.sharedMiscState.isPageHidden) {
                 let unreadCount = this.sharedConversationState.currentConversationInfo.unreadCount;
@@ -695,7 +736,15 @@ export default {
                 }
             }
             return null;
+        },
+        checkShowScrollBtnComp(){
+            console.log("checkShowScrollBtn", this.showScrollButton)
+            return this.showScrollButton;
         }
+        // messageListContainerScrollHeight() {
+        //     console.log(this.$refs['conversationMessageList'].scrollHeight)
+        //     return this.$refs['conversationMessageList'].scrollHeight;
+        // }
     },
 
     directives: {
@@ -862,5 +911,25 @@ export default {
 
 .conversation-info-container.active {
     display: flex;
+}
+.chat-list-container{
+    position: relative;
+}
+.scroll-bottom-btn{
+    position: absolute;
+    right: 1rem;
+    top: 62%;
+}
+.scroll-bottom-btn{
+    font-size: 1.7rem;
+    cursor: pointer;
+}
+.scroll-bottom-btn img{
+    border: 2px solid #dcdee4;
+    border-radius: 50%;
+}
+.scroll-bottom-btn img:active{
+    border: 2px solid #5f77bd;
+    border-radius: 50%;
 }
 </style>

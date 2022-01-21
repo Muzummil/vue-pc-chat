@@ -374,7 +374,7 @@ function checkForUpdates() {
 
 function updateTray(unread = 0) {
     settings.showOnTray = true;
-
+    console.log("TRAY", tray, updateTray.lastUnread , unread)
     if (settings.showOnTray) {
         if (tray
             && updateTray.lastUnread === unread) {
@@ -799,7 +799,7 @@ const createMainWindow = async () => {
         app.setAboutPanelOptions({
             applicationName: pkg.name,
             applicationVersion: pkg.version,
-            copyright: 'Made with 💖 by wildfiechat. \n https://github.com/wildfirechat/vue-pc-chat',
+            copyright: 'Made with 💖 by PandaDB Chat. \n https://www.pandadbapp.com',
             version: pkg.version
         });
     }

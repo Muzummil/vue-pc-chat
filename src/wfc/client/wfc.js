@@ -901,7 +901,7 @@ export class WfcManager {
      * 获取频道信息
      * @param {string} channelId 频道id
      * @param {boolean} refresh 是否强制刷新
-     * @returns {ChannelInfo|null}
+     * @returns {ChannelInfo|NullChannelInfo}
      */
     getChannelInfo(channelId, refresh) {
         return impl.getChannelInfo(channelId, refresh);
@@ -1340,6 +1340,35 @@ export class WfcManager {
     }
 
     /**
+     * 搜索消息
+     * @param {Conversation} conversation 目标会话，如果为空搜索所有会话
+     * @param {string} keyword 关键字
+     * @param {[number]} contentTypes 消息类型列表，可选值参考{@link MessageContentType}
+     * @param {boolean} desc 逆序排列
+     * @param {int} limit 返回数量
+     * @param {int} offset 偏移
+     * @returns {[Message]}
+     */
+    searchMessageByTypes(conversation, keyword, contentTypes, desc, limit, offset) {
+        return impl.searchMessageByTypes(conversation, keyword, contentTypes, desc, limit, offset);
+    }
+
+    /**
+     * 搜索消息
+     * @param {[number]} conversationTypes 会话类型列表，可选值参考{@link  ConversationType}
+     * @param {[number]} lines 会话线路列表
+     * @param {[number]} contentTypes 消息类型列表，可选值参考{@link MessageContentType}
+     * @param {string} keyword 关键字
+     * @param {number} fromIndex messageId，表示从那一条消息开始获取
+     * @param {boolean} desc 逆序排列
+     * @param {int} count 最大数量
+     * @returns {[Message]}
+     */
+    searchMessageEx2(conversationTypes, lines, contentTypes, keyword, fromIndex, desc, count) {
+        return impl.searchMessageEx2(conversationTypes, lines, contentTypes, keyword, fromIndex, desc, count);
+    }
+
+    /**
      * 发送消息
      * @param {Conversation} conversation 目标会话
      * @param {MessageContent} messageContent 具体的消息内容，一定要求是{@link MessageContent} 的子类，不能是普通的object
@@ -1400,6 +1429,29 @@ export class WfcManager {
      */
     deleteMessage(messageId) {
         return impl.deleteMessageById(messageId);
+    }
+
+    /**
+     * 删除远程消息
+     * @param {Long | string} msgUid 消息uid
+     * @param {function ()} successCB
+     * @param {function (number)} failCB
+     */
+    deleteRemoteMessageByUid(msgUid, successCB, failCB){
+        impl.deleteRemoteMessage(msgUid, successCB, failCB);
+    }
+
+    /**
+    * 更新远程消息消息内容，只有专业版支持。客户端仅能更新自己发送的消息，更新的消息类型不能变，更新的消息类型是服务配置允许更新的内容。Server API更新则没有限制。
+     * @param {Long | string} msgUid 消息uid
+     * @param {MessageContent} messageContent 具体的消息内容，一定要求是{@link MessageContent} 的子类，不能是普通的object
+     * @param {boolean} distribute 是否重新分发给其他客户端
+     * @param {boolean} updateLocal 是否更新本地消息内容
+     * @param {function ()} successCB
+     * @param {function (number)} failCB
+     */
+    updateRemoteMessageContent(msgUid, messageContent, distribute, updateLocal, successCB, failCB){
+        impl.updateRemoteMessageContent(msgUid, messageContent, distribute, updateLocal, successCB, failCB);
     }
 
     /**

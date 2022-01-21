@@ -48,14 +48,17 @@
                             </div>
                         </li>
                         <li>
-                            <img class="icon-img" v-if="this.$router.currentRoute.path === '/home/contact'"
-                               @click="go2Contact" src="../../assets/icons/profile-active-icon.svg" alt="contact" >
-                            <img class="icon-img" v-else
-                               @click="go2Contact" src="../../assets/icons/profile-icon.svg" alt="contact" >
+                            <div class="menu-item">
+                                <img class="icon-img" v-if="this.$router.currentRoute.path === '/home/contact'"
+                                @click="go2Contact" src="../../assets/icons/profile-active-icon.svg" alt="contact" >
+                                <img class="icon-img" v-else
+                                @click="go2Contact" src="../../assets/icons/profile-icon.svg" alt="contact" >
 
-                            <!-- <i class="icon-ion-android-contact"
-                               v-bind:class="{active : this.$router.currentRoute.path === '/home/contact'}"
-                               @click="go2Contact"></i> -->
+                                <em v-show="newFriendReqCount > 0" class="badge">{{ newFriendReqCount > 99 ? '99' : newFriendReqCount }}</em>
+                                <!-- <i class="icon-ion-android-contact"
+                                v-bind:class="{active : this.$router.currentRoute.path === '/home/contact'}"
+                                @click="go2Contact"></i> -->
+                            </div>
                         </li>
                         <li v-if="sharedMiscState.isElectron">
 
@@ -319,6 +322,14 @@ export default {
                 let unreadCount = info.unreadCount;
                 count += unreadCount.unread;
             });
+            return count;
+        },
+        newFriendReqCount() {
+            let count = 0;
+            if(this.sharedContactState && this.sharedContactState.friendRequestList){
+                count = this.sharedContactState.friendRequestList.filter(obj=> obj.status == 0).length;
+            }
+
             return count;
         },
         dragAreaLeft() {

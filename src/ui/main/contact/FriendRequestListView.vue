@@ -8,24 +8,73 @@
                     <div class="new-friend-item">
                         <img class="avatar" :src="friendRequest._target.portrait">
                         <div class="info">
-                            <div class="name-action">
-                                <span class="name single-line">{{ friendRequest._target.displayName }}</span>
-                                <span v-if="friendRequest.status === 1" class="status">{{
-                                        $t('friend_request.accepted')
-                                    }}</span>
-                                <button v-else-if="friendRequest.status === 0" class="accept"
-                                        @click="accept(friendRequest)">{{
-                                        $t('common.add')
+                            <div class="info-container">
+                                <!-- Start User details part -->
+                                <div class="user-info-container">
+
+                                    <div class="username user-info-text">{{ friendRequest._target.displayName }}</div>
+
+                                    <div class="req-reason user-info-text">
+                                        <span v-if="friendRequest.reason" class="reason">{{ friendRequest.reason }}</span>
+
+                                        <span v-else class="reason">{{ $t('friend_request.im') + friendRequest._target.displayName }}</span>
+                                    </div>
+                                </div>
+                                <!-- End User details part -->
+
+                                <!-- Start User action -->
+                                <div v-if="friendRequest.status === 0" class="user-action-container">
+                                    <div class="accept-btn">
+                                        <button class="action-btn"
+                                            @click="accept(friendRequest)">{{ $t('common.add') }}
+                                        </button>
+                                    </div>
+                                    <div class="reject-btn">
+                                        <button class="action-btn reject"
+                                            @click="reject(friendRequest)">{{ $t('common.reject') }}
+                                        </button>
+                                    </div>
+                                </div>
+                                <!-- End User action part -->
+                                
+                                <!-- Start req feedback -->
+
+                                <div v-else class="req-feedback name-action username">
+                                    <span v-if="friendRequest.status === 3" class="status">{{
+                                            $t('friend_request.denied')
+                                        }}</span>
+                                    <span v-if="friendRequest.status === 1" class="status">{{
+                                            $t('friend_request.accepted')
+                                        }}</span>
+                                </div>
+                                <!-- End req feedback -->
+                            </div>
+                            
+
+
+                            <!-- <div class="name-action">
+
+                                <span v-if="friendRequest.reason" class="reason single-line width">{{ friendRequest.reason }}</span>
+
+                                <span v-else class="reason single-line width">{{ $t('friend_request.im') + friendRequest._target.displayName }}</span>
+
+                                <button v-if="friendRequest.status === 0" class="accept reject"
+                                        @click="reject(friendRequest)">{{
+                                        $t('common.reject')
                                     }}
                                 </button>
-                                <span
+                                
+                            </div> -->
+
+                            <!-- <span v-if="friendRequest.status === 1" class="status">{{
+                                        $t('friend_request.accepted')
+                                    }}</span>
+
+                                    <span
                                     v-else-if="friendRequest.status === 3" class="status">{{
                                         $t('friend_request.denied')
-                                    }}</span>
-                            </div>
-                            <p class="reason single-line">{{
-                                    $t('friend_request.im') + friendRequest._target.displayName
-                                }}</p>
+                                    }}</span> -->
+
                         </div>
                     </div>
                 </div>
@@ -58,6 +107,13 @@ export default {
                 friendRequest.status = 1;
             }, (err) => {
                 console.log('accept friend request error', err)
+            })
+        },
+        reject(friendRequest) {
+            wfc.handleFriendRequest(friendRequest.target, false, "", () => {
+                friendRequest.status = 3;
+            }, (err) => {
+                console.log('reject friend request error', err)
             })
         }
     }
@@ -98,17 +154,11 @@ export default {
     flex: 1;
 }
 
-.new-friend-item .info .name-action {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.new-friend-item .info .name-action .name {
+ .name {
     flex: 1;
 }
 
-.new-friend-item .info .name-action .accept {
+.action-btn {
     padding: 0 10px;
     text-align: center;
     color: white;
@@ -116,7 +166,7 @@ export default {
     border-radius: 10px;
 }
 
-.new-friend-item .info .name-action .status {
+.status {
     color: #b2b2b2;
 }
 
@@ -124,6 +174,27 @@ export default {
     font-size: 12px;
     color: #b2b2b2;
 }
-
-
+.name-action.username{
+    margin-bottom: 5px;
+}
+.user-info-container, .user-action-container{
+    line-height: 1.4rem;
+}
+.user-info-container{
+    width: 77px;
+}
+.user-info-text{
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    width: 76px;
+}
+.action-btn.reject{
+    background: #bf4d4d !important;
+}
+.info-container{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
 </style>

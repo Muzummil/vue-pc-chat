@@ -167,7 +167,9 @@
         "month_12": "十二月",
         "wfc_id": "Panda号",
         "name": "昵称",
-        "nameSearch": "搜索昵称"
+        "nameSearch": "搜索昵称",
+        "reject": "拒绝",
+        "reason": "打招呼"
     },
     "misc":{
         "beijing": "北京",
