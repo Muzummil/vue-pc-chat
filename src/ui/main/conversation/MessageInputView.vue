@@ -196,7 +196,7 @@ export default {
             // }
             // this.$refs['input'].textContent = '';
             // // 发送消息时，会话消息列表需要滚动到最后
-            // store.setShouldAutoScrollToBottom(true)
+            store.setShouldAutoScrollToBottom(true)
             //
             // let textMessageContent = this.handleMention(text)
             // let conversation = this.conversationInfo.conversation;
@@ -211,9 +211,6 @@ export default {
                 message = input.innerText.trim();
             }
             let conversation = this.conversationInfo.conversation;
-            // console.log("input.innerText", input.innerText)
-            // console.log("input.innerHTML", input.innerHTML)
-            // return;
             if (
                 !conversation
                 || !this.canisend()
@@ -221,8 +218,6 @@ export default {
             ) return;
 
             if (e.ctrlKey) {
-                // e.preventDefault();
-                // this.refs.input.innerHTML = this.refs.input.innerHTML+ "<div><br></div>";
                 document.execCommand('InsertHTML', true, '<br>');
                 if (window.getSelection) {
                     let selection = window.getSelection(),
@@ -240,52 +235,74 @@ export default {
                 return;
             }
 
-            // if(!message.startsWith('<')){
-            //     message = message.replace(/<br>/g, '\n').trim()
-            // }
+            let isEmoji = false;
+            if(input.innerHTML.toString().includes("<img")){
+                let imgs = [...input.getElementsByTagName('img')];
+                if (imgs) {
+                    imgs.forEach(img => {
+                        if (img.className.indexOf('emoji') >= 0) {
+                            isEmoji = true
+                            return;
+                        }
+                        let src = img.src;
+                        let file;
+                        try{
+                            if (isElectron()) {
+                                debugger
+                                file = src.substring(17, src.length);
+                            } else {
+                                file = fileFromDataUri(src, new Date().getTime() + '.png');
+                            }
+                            debugger
+                            this.$eventBus.$emit('uploadFile', file)
+                            store.sendFile(this.conversationInfo.conversation, file)
+                            // 会影响 input.getElementsByTagName 返回的数组，所以上面拷贝了一下
+                            img.parentNode.removeChild(img);
+                            debugger
+                        }catch(e){
+                            console.log(e)
+                        }
+                        
+                    });
+                }
 
-            let imgs = [...input.getElementsByTagName('img')];
-            if (imgs) {
-                imgs.forEach(img => {
-                    if (img.className.indexOf('emoji') >= 0) {
-                        return;
-                    }
-                    let src = img.src;
-                    let file;
-                    if (isElectron()) {
-                        file = src.substring(17, src.length);
-                    } else {
-                        file = fileFromDataUri(src, new Date().getTime() + '.png');
-                    }
-                    this.$eventBus.$emit('uploadFile', file)
-                    store.sendFile(this.conversationInfo.conversation, file)
-                    // 会影响 input.getElementsByTagName 返回的数组，所以上面拷贝了一下
-                    img.parentNode.removeChild(img);
-                });
-            }
-            message = message.replace(/<br>/g, '\n')
+                message = message.replace(/<br>/g, '\n')
                 .replace(/<div>/g, '\n')
                 .replace(/<\/div>/g, '')
                 .replace(/&nbsp;/g, ' ');
 
-            message = message.replace(/<img class="emoji" draggable="false" alt="/g, '')
+                message = message.replace(/<img class="emoji" draggable="false" alt="/g, '')
                 .replace(/" src="https:\/\/static\.wildfirechat\.net\/twemoji\/assets\/72x72\/[0-9a-z-]+\.png">/g, '')
-
-            if (message && message.trim()) {
-                let textMessageContent = this.handleMention(message);
-                let quotedMessage = this.sharedConversationState.quotedMessage;
-                if (quotedMessage) {
-                    let quoteInfo = QuoteInfo.initWithMessage(quotedMessage);
-                    textMessageContent.setQuoteInfo(quoteInfo);
-                }
-                wfc.sendConversationMessage(conversation, textMessageContent);
-                this.$refs['input'].innerHTML = '';
+            } else if (message && message.trim()) {
+                this.sendTextMessage(message, conversation)
             }
-
+            if(isEmoji){
+                this.sendTextMessage(message, conversation)
+            }
+            debugger
             input.innerHTML = '';
             store.quoteMessage(null);
             Draft.setConversationDraft(conversation, '', null, null);
             e.preventDefault();
+        },
+        sendTextMessage(message, conversation){
+            message = message.replace(/<br>/g, '\n')
+            .replace(/<div>/g, '\n')
+            .replace(/<\/div>/g, '')
+            .replace(/&nbsp;/g, ' ');
+
+            message = message.replace(/<img class="emoji" draggable="false" alt="/g, '')
+            .replace(/" src="https:\/\/static\.wildfirechat\.net\/twemoji\/assets\/72x72\/[0-9a-z-]+\.png">/g, '')
+
+
+            let textMessageContent = this.handleMention(message);
+            let quotedMessage = this.sharedConversationState.quotedMessage;
+            if (quotedMessage) {
+                let quoteInfo = QuoteInfo.initWithMessage(quotedMessage);
+                textMessageContent.setQuoteInfo(quoteInfo);
+            }
+            wfc.sendConversationMessage(conversation, textMessageContent);
+            this.$refs['input'].innerHTML = '';
         },
 
         toggleEmojiView() {

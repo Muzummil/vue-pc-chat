@@ -287,7 +287,7 @@ export default {
         checkShowScrollBtn() {
             let messageListContainerElement = this.$refs['conversationMessageList'];
             if(messageListContainerElement){
-                console.log(messageListContainerElement.offsetHeight,  messageListContainerElement.scrollTop, messageListContainerElement.scrollHeight)
+                // console.log(messageListContainerElement.offsetHeight,  messageListContainerElement.scrollTop, messageListContainerElement.scrollHeight)
             }
             if( messageListContainerElement && (messageListContainerElement.offsetHeight + messageListContainerElement.scrollTop) < messageListContainerElement.scrollHeight - 400){
                 this.showScrollButton = true; 
@@ -305,7 +305,7 @@ export default {
             // }else{
             //     this.messageListContainerScrollHeight = 0;
             // }
-            console.log(this.messageListContainerScrollHeight)
+            // console.log(this.messageListContainerScrollHeight)
             // hide tippy userCard
             for (const popper of document.querySelectorAll('.tippy-popper')) {
                 const instance = popper._tippy;
@@ -690,7 +690,7 @@ export default {
     },
 
     beforeUpdate(){
-        console.log("BEFORECONV", this.sharedConversationState.forceScrollToBottom)
+        // console.log("BEFORECONV", this.sharedConversationState.forceScrollToBottom)
         if(this.sharedConversationState.forceScrollToBottom){
             this.scrollToBottom();
         }
@@ -698,7 +698,7 @@ export default {
     updated() {
         this.popupItem = this.$refs['setting'];
         // refer to http://iamdustan.com/smoothscroll/
-        console.log('conversationView updated', this.sharedConversationState.shouldAutoScrollToBottom)
+        // console.log('conversationView updated', this.sharedConversationState.shouldAutoScrollToBottom)
         if (this.sharedConversationState.currentConversationInfo) {
             if (!this.sharedMiscState.isPageHidden) {
                 let unreadCount = this.sharedConversationState.currentConversationInfo.unreadCount;
@@ -713,6 +713,7 @@ export default {
         }
         this.conversationInfo = this.sharedConversationState.currentConversationInfo;
         this.sharedConversationState.forceScrollToBottom = false;
+        console.log('sharedConversationState.currentConversationInfo', this.sharedConversationState)
     },
 
     computed: {
@@ -736,7 +737,7 @@ export default {
             return null;
         },
         checkShowScrollBtnComp(){
-            console.log("checkShowScrollBtn", this.showScrollButton)
+            // console.log("checkShowScrollBtn", this.showScrollButton)
             return this.showScrollButton;
         }
         // messageListContainerScrollHeight() {
