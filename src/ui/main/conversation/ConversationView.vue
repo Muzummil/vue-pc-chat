@@ -287,7 +287,7 @@ export default {
         checkShowScrollBtn() {
             let messageListContainerElement = this.$refs['conversationMessageList'];
             if(messageListContainerElement){
-                console.log(messageListContainerElement.offsetHeight,  messageListContainerElement.scrollTop, messageListContainerElement.scrollHeight)
+                // console.log(messageListContainerElement.offsetHeight,  messageListContainerElement.scrollTop, messageListContainerElement.scrollHeight)
             }
             if( messageListContainerElement && (messageListContainerElement.offsetHeight + messageListContainerElement.scrollTop) < messageListContainerElement.scrollHeight - 400){
                 this.showScrollButton = true; 
@@ -305,7 +305,7 @@ export default {
             // }else{
             //     this.messageListContainerScrollHeight = 0;
             // }
-            console.log(this.messageListContainerScrollHeight)
+            // console.log(this.messageListContainerScrollHeight)
             // hide tippy userCard
             for (const popper of document.querySelectorAll('.tippy-popper')) {
                 const instance = popper._tippy;
@@ -633,7 +633,7 @@ export default {
         scrollToBottom(){
             let messageListElement = this.$refs['conversationMessageList'];
             if(messageListElement){
-                messageListElement.scroll({top: messageListElement.scrollHeight, left: 0, behavior: 'smooth'})
+                messageListElement.scroll({top: messageListElement.scrollHeight + 100000, left: 0, behavior: 'smooth'})
             }
         }
     },
@@ -674,14 +674,12 @@ export default {
                     ev.reply('inviteConferenceParticipantCancel')
                 });
         });
-        if (this.sharedConversationState.shouldAutoScrollToBottom) {
-            let messageListElement = this.$refs['conversationMessageList'];
-            if(messageListElement){
-                messageListElement.scroll({top: messageListElement.scrollHeight, left: 0, behavior: 'auto'})
-            }
-        } else {
-            // 用户滑动到上面之后，收到新消息，不自动滑动到最下面
-        }
+        this.scrollToBottom();
+        // if (this.sharedConversationState.shouldAutoScrollToBottom) {
+        //     this.scrollToBottom();
+        // } else {
+        //     // 用户滑动到上面之后，收到新消息，不自动滑动到最下面
+        // }
     },
 
     beforeDestroy() {
@@ -692,16 +690,15 @@ export default {
     },
 
     beforeUpdate(){
-        if(this.sharedConversationState.shouldAutoScrollToBottom && !this.showScrollButton){
+        // console.log("BEFORECONV", this.sharedConversationState.forceScrollToBottom)
+        if(this.sharedConversationState.forceScrollToBottom){
             this.scrollToBottom();
-            let messageListElement = this.$refs['conversationMessageList'];
-            messageListElement.scroll({top: messageListElement.scrollHeight, left: 0, behavior: 'smooth'})
         }
     },
     updated() {
         this.popupItem = this.$refs['setting'];
         // refer to http://iamdustan.com/smoothscroll/
-        console.log('conversationView updated', this.sharedConversationState.shouldAutoScrollToBottom)
+        // console.log('conversationView updated', this.sharedConversationState.shouldAutoScrollToBottom)
         if (this.sharedConversationState.currentConversationInfo) {
             if (!this.sharedMiscState.isPageHidden) {
                 let unreadCount = this.sharedConversationState.currentConversationInfo.unreadCount;
@@ -715,6 +712,8 @@ export default {
             this.showConversationInfo = false;
         }
         this.conversationInfo = this.sharedConversationState.currentConversationInfo;
+        this.sharedConversationState.forceScrollToBottom = false;
+        console.log('sharedConversationState.currentConversationInfo', this.sharedConversationState)
     },
 
     computed: {
@@ -738,7 +737,7 @@ export default {
             return null;
         },
         checkShowScrollBtnComp(){
-            console.log("checkShowScrollBtn", this.showScrollButton)
+            // console.log("checkShowScrollBtn", this.showScrollButton)
             return this.showScrollButton;
         }
         // messageListContainerScrollHeight() {

@@ -215,18 +215,20 @@ export default {
 
     computed: {
         enableAddGroupMember() {
-            let selfUid = wfc.getUserId();
-            let groupInfo = this.conversationInfo.conversation._target;
-            //在group type为Restricted时，0 开放加入权限（群成员可以拉人，用户也可以主动加入）；1 只能群成员拉人入群；2 只能群管理拉人入群
-            if (groupInfo.type === GroupType.Restricted) {
-                if (groupInfo.joinType === 0 || groupInfo.joinType === 1) {
-                    return true;
-                } else if (groupInfo.joinType === 2) {
-                    let groupMember = wfc.getGroupMember(this.conversationInfo.conversation.target, selfUid);
-                    return [GroupMemberType.Manager, GroupMemberType.Owner].indexOf(groupMember.type) >= 0;
-                }
-            }
             return true;
+            // Hardcoded because of requirements that change is open for all
+            // let selfUid = wfc.getUserId();
+            // let groupInfo = this.conversationInfo.conversation._target;
+            // //在group type为Restricted时，0 开放加入权限（群成员可以拉人，用户也可以主动加入）；1 只能群成员拉人入群；2 只能群管理拉人入群
+            // if (groupInfo.type === GroupType.Restricted) {
+            //     if (groupInfo.joinType === 0 || groupInfo.joinType === 1) {
+            //         return true;
+            //     } else if (groupInfo.joinType === 2) {
+            //         let groupMember = wfc.getGroupMember(this.conversationInfo.conversation.target, selfUid);
+            //         return [GroupMemberType.Manager, GroupMemberType.Owner].indexOf(groupMember.type) >= 0;
+            //     }
+            // }
+            // return true;
         },
 
         enableRemoveGroupMember() {
@@ -237,9 +239,11 @@ export default {
         },
 
         enableEditGroupNameOrAnnouncement() {
-            let selfUid = wfc.getUserId();
-            let groupMember = wfc.getGroupMember(this.conversationInfo.conversation.target, selfUid);
-            return [GroupMemberType.Manager, GroupMemberType.Owner].indexOf(groupMember.type) >= 0;
+            return true; 
+            // Hardcoded because of requirements that change is open for all
+            // let selfUid = wfc.getUserId();
+            // let groupMember = wfc.getGroupMember(this.conversationInfo.conversation.target, selfUid);
+            // return [GroupMemberType.Manager, GroupMemberType.Owner].indexOf(groupMember.type) >= 0;
         },
 
         users() {

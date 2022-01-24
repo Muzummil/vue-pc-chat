@@ -196,6 +196,7 @@ export default {
     },
     computed: {
         messages() {
+            console.log("VV", this.contextMessages , this.currentConversationMessages)
             return this.currentMessage ? this.contextMessages : this.currentConversationMessages;
         }
     },

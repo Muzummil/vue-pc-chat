@@ -38,9 +38,9 @@
                                 <!-- End User action part -->
                                 
                                 <!-- Start req feedback -->
-
+                                
                                 <div v-else class="req-feedback name-action username">
-                                    <span v-if="friendRequest.status === 3" class="status">{{
+                                    <span v-if="friendRequest.status === 3 || friendRequest.status === 2" class="status">{{
                                             $t('friend_request.denied')
                                         }}</span>
                                     <span v-if="friendRequest.status === 1" class="status">{{

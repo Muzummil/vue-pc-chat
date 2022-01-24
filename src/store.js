@@ -446,6 +446,7 @@ let store = {
         }
         conversationState.currentConversationInfo = conversationInfo;
         conversationState.shouldAutoScrollToBottom = true;
+        conversationState.forceScrollToBottom = true;
         conversationState.currentConversationMessageList.length = 0;
         this._loadCurrentConversationMessages();
 
@@ -701,6 +702,7 @@ let store = {
                 }
                 xhr.send(file);
             }
+            debugger
 
             miscState.uploadBigFiles.push({
                 remoteUrl: remoteUrl,
@@ -712,6 +714,7 @@ let store = {
                 progress: 0,
                 xhr: xhr,
             });
+            debugger
         }, (e) => {
             console.log('getUploadMediaUrl e', e)
         })
@@ -729,86 +732,94 @@ let store = {
      * @return {Promise<boolean>}
      */
     async sendFile(conversation, file) {
-        console.log('send file', file)
-        if (file.size && file.size > 100 * 1024 * 1024) {
-            if (wfc.isSupportBigFilesUpload()) {
-                this.sendBigFile(conversation, file);
-            } else {
-                console.log('file too big, and not support upload big file')
+        try {
+
+            console.log('send file', file)
+            debugger
+            if (file.size && file.size > 100 * 1024 * 1024) {
+                if (wfc.isSupportBigFilesUpload()) {
+                    this.sendBigFile(conversation, file);
+                } else {
+                    console.log('file too big, and not support upload big file')
+                }
+                return true;
             }
-            return true;
-        }
-        let fileOrLocalPath = null;
-        let remotePath = null;
-        if (typeof file === 'string') {
-            if (!file.startsWith('http')) {
+            let fileOrLocalPath = null;
+            let remotePath = null;
+            if (typeof file === 'string') {
+                if (!file.startsWith('http')) {
+                    fileOrLocalPath = file;
+                } else {
+                    remotePath = file;
+                }
+
+                file = {
+                    path: file,
+                    name: file.substring((file.lastIndexOf('/') + 1))
+                }
+            } else {
                 fileOrLocalPath = file;
-            } else {
-                remotePath = file;
             }
+            debugger
+            let msg = new Message();
+            msg.conversation = conversation;
 
-            file = {
-                path: file,
-                name: file.substring((file.lastIndexOf('/') + 1))
-            }
-        } else {
-            fileOrLocalPath = file;
-        }
-        let msg = new Message();
-        msg.conversation = conversation;
+            let mediaType = helper.getMediaType(file.name.split('.').slice(-1).pop());
+            // todo other file type
+            let messageContentmediaType = {
+                'pic': MessageContentMediaType.Image,
+                'video': MessageContentMediaType.Video,
+                'doc': MessageContentMediaType.File,
+            }[mediaType];
 
-        let mediaType = helper.getMediaType(file.name.split('.').slice(-1).pop());
-        // todo other file type
-        let messageContentmediaType = {
-            'pic': MessageContentMediaType.Image,
-            'video': MessageContentMediaType.Video,
-            'doc': MessageContentMediaType.File,
-        }[mediaType];
-
-        let messageContent;
-        switch (messageContentmediaType) {
-            case MessageContentMediaType.Image:
-                let iThumbnail = await imageThumbnail(file);
-                if (iThumbnail === null) {
+            let messageContent;
+            switch (messageContentmediaType) {
+                case MessageContentMediaType.Image:
+                    let iThumbnail = await imageThumbnail(file);
+                    if (iThumbnail === null) {
+                        return false;
+                    }
+                    // let img64 = self.imgDataUriToBase64(imageThumbnail);
+                    messageContent = new ImageMessageContent(fileOrLocalPath, remotePath, iThumbnail.split(',')[1]);
+                    break;
+                case MessageContentMediaType.Video:
+                    let vThumbnail = await videoThumbnail(file);
+                    let duration = await videoDuration(file)
+                    duration = Math.ceil(duration * 1000);
+                    if (vThumbnail === null) {
+                        return false;
+                    }
+                    // let video64 = self.imgDataUriToBase64(videoThumbnail);
+                    messageContent = new VideoMessageContent(fileOrLocalPath, remotePath, vThumbnail.split(',')[1]);
+                    break;
+                case MessageContentMediaType.File:
+                    messageContent = new FileMessageContent(fileOrLocalPath, remotePath);
+                    break;
+                default:
                     return false;
-                }
-                // let img64 = self.imgDataUriToBase64(imageThumbnail);
-                messageContent = new ImageMessageContent(fileOrLocalPath, remotePath, iThumbnail.split(',')[1]);
-                break;
-            case MessageContentMediaType.Video:
-                let vThumbnail = await videoThumbnail(file);
-                let duration = await videoDuration(file)
-                duration = Math.ceil(duration * 1000);
-                if (vThumbnail === null) {
-                    return false;
-                }
-                // let video64 = self.imgDataUriToBase64(videoThumbnail);
-                messageContent = new VideoMessageContent(fileOrLocalPath, remotePath, vThumbnail.split(',')[1]);
-                break;
-            case MessageContentMediaType.File:
-                messageContent = new FileMessageContent(fileOrLocalPath, remotePath);
-                break;
-            default:
-                return false;
-        }
-        msg.messageContent = messageContent;
-        wfc.sendMessage(msg,
-            (messageId) => {
-                console.log('sf, p', messageId)
-
-            },
-            (progress, total) => {
-                // console.log('sf pp', progress, total)
-            },
-            (messageUid) => {
-                console.log('sf s', messageUid)
-
-            },
-            (error) => {
-                console.log('sf e', error)
-
             }
-        );
+            msg.messageContent = messageContent;
+            wfc.sendMessage(msg,
+                (messageId) => {
+                    console.log('sf, p', messageId)
+
+                },
+                (progress, total) => {
+                    // console.log('sf pp', progress, total)
+                },
+                (messageUid) => {
+                    console.log('sf s', messageUid)
+
+                },
+                (error) => {
+                    console.log('sf e', error)
+
+                }
+            );
+            
+        } catch (error) {
+            console.log(error)
+        }
     },
 
     quoteMessage(message) {
@@ -1569,7 +1580,6 @@ let store = {
         if(count > 0){
             this.playNotificationSound();
         }
-        console.log("UPDATETRAY", count)
         ipcRenderer.send('update-badge', count)
     },
 
