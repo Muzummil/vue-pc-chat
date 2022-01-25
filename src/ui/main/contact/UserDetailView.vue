@@ -33,6 +33,8 @@
         </div>
         <div class="footer">
             <a @click="this.chat">{{ $t('message.send_message') }}</a>
+            <a v-if="!isBlackListed" class="delete-friend" @click="changeFriendBlacklist(true)">{{ $t('friend_request.blacklistFriend') }}</a>
+            <a v-if="isBlackListed" class="delete-friend" @click="changeFriendBlacklist(false)">{{ $t('friend_request.unBlacklistFriend') }}</a>
         </div>
     </section>
 </template>
@@ -72,6 +74,13 @@ export default {
                     })
             // }
         },
+        changeFriendBlacklist(status){
+            wfc.setBlackList(this.user.uid, status, () => {
+                this.sharedStateContact.currentFriend = null;
+            }, (error) => {
+                console.log(error)
+            });
+        }
     },
     computed: {
         name: function () {
@@ -87,6 +96,13 @@ export default {
                 wfc.getUserInfo(friend.uid, true)
             })();
             return name;
+        },
+        isBlackListed() {
+            if(this.user){
+                return wfc.isBlackListed(this.user.uid);
+            }
+
+            return false;
         }
     }
 }
@@ -168,10 +184,15 @@ export default {
     background-color: #34b7f1;
     border-radius: 5px;
     border: 1px solid transparent;
+    cursor: pointer;
 }
 
 .footer a:active {
     background-color: #4168e0;
+}
+a.delete-friend{
+    margin-left: 2rem;
+    background-color: #f50606;
 }
 
 </style>

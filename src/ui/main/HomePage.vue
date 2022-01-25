@@ -165,6 +165,7 @@ export default {
                 boundingElement: undefined,
                 resetInitialPos: true,
             },
+            onloadFriendReqCount: 0
         };
     },
 
@@ -173,6 +174,8 @@ export default {
             wfc.getUserInfo(this.sharedContactState.selfUserInfo.uid, true);
         },
         go2Conversation() {
+            // Used event bus bcz state change from here was not updating in all the cases in conversationList component
+            this.$eventBus.$emit('scroll-conversation-list-top', true);
             if (this.$router.currentRoute.path === '/home') {
                 return
             }
@@ -310,6 +313,9 @@ export default {
                 }
             }
         },
+        changeFriendReqCount(value){
+            this.onloadFriendReqCount = value;
+        }
     },
 
     computed: {
@@ -329,6 +335,10 @@ export default {
             if(this.sharedContactState && this.sharedContactState.friendRequestList){
                 count = this.sharedContactState.friendRequestList.filter(obj=> obj.status == 0).length;
             }
+            if(count > this.onloadFriendReqCount){
+                store.playNotificationSound();
+            }
+            this.changeFriendReqCount(count);
 
             return count;
         },
@@ -383,6 +393,17 @@ export default {
                 });
             }
         });
+
+        if(this.newFriendReqCount > 0){
+            this.onloadFriendReqCount = this.newFriendReqCount; 
+            store.playNotificationSound();
+        }
+    },
+
+    updated(){
+        if(this.newFriendReqCount > this.onloadFriendReqCount){
+            store.playNotificationSound();
+        }
     },
 
     mounted() {

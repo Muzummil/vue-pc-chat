@@ -26,7 +26,9 @@
     "intro": "你好",
     "addFriend": "添加好友",
     "reqSent": "请求已发送",
-    "reqAlreadySent": "已发送好友申请"
+    "reqAlreadySent": "已发送好友申请",
+    "blacklistFriend": "加入黑名单",
+    "unBlacklistFriend": "取消黑名单"
   },
   "group": {
     "name": "群名稱{0}",

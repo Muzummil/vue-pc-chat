@@ -188,7 +188,6 @@ export default {
             dragAndDropEnterCount: 0,
             // FIXME 选中一个会话，然后切换到其他page，比如联系人，这时该会话收到新消息或发送消息，会导致新收到/发送的消息的界面错乱，尚不知道原因，但这么做能解决。
             fixTippy: false,
-            messageListContainerScrollHeight: 0,
             showScrollButton:  false
         };
     },
@@ -286,9 +285,6 @@ export default {
         },
         checkShowScrollBtn() {
             let messageListContainerElement = this.$refs['conversationMessageList'];
-            if(messageListContainerElement){
-                // console.log(messageListContainerElement.offsetHeight,  messageListContainerElement.scrollTop, messageListContainerElement.scrollHeight)
-            }
             if( messageListContainerElement && (messageListContainerElement.offsetHeight + messageListContainerElement.scrollTop) < messageListContainerElement.scrollHeight - 400){
                 this.showScrollButton = true; 
             }else{
@@ -297,15 +293,9 @@ export default {
         },
 
         onScroll(e) {
-            // this.messageListContainerScrollHeight = this.$refs['conversationMessageList'].scrollHeight;
-            // console.log("current SH", this.messageListContainerScrollHeight);
+            
+            this.sharedConversationState.forceScrollToBottom = false;
             this.checkShowScrollBtn();
-            // if(this.$refs['conversationMessageList'].scrollHeight > 500){
-            //     this.messageListContainerScrollHeight = this.$refs['conversationMessageList'].scrollHeight;
-            // }else{
-            //     this.messageListContainerScrollHeight = 0;
-            // }
-            // console.log(this.messageListContainerScrollHeight)
             // hide tippy userCard
             for (const popper of document.querySelectorAll('.tippy-popper')) {
                 const instance = popper._tippy;
@@ -690,7 +680,7 @@ export default {
     },
 
     beforeUpdate(){
-        // console.log("BEFORECONV", this.sharedConversationState.forceScrollToBottom)
+        console.log("BEFORE UPDATED", this.sharedConversationState.forceScrollToBottom);
         if(this.sharedConversationState.forceScrollToBottom){
             this.scrollToBottom();
         }
@@ -698,7 +688,6 @@ export default {
     updated() {
         this.popupItem = this.$refs['setting'];
         // refer to http://iamdustan.com/smoothscroll/
-        // console.log('conversationView updated', this.sharedConversationState.shouldAutoScrollToBottom)
         if (this.sharedConversationState.currentConversationInfo) {
             if (!this.sharedMiscState.isPageHidden) {
                 let unreadCount = this.sharedConversationState.currentConversationInfo.unreadCount;
@@ -712,9 +701,8 @@ export default {
             this.showConversationInfo = false;
         }
         this.conversationInfo = this.sharedConversationState.currentConversationInfo;
-        this.sharedConversationState.forceScrollToBottom = false;
-        console.log('sharedConversationState.currentConversationInfo', this.sharedConversationState)
-    },
+        // this.sharedConversationState.forceScrollToBottom = false;
+    },    
 
     computed: {
         conversationTitle() {
@@ -737,13 +725,8 @@ export default {
             return null;
         },
         checkShowScrollBtnComp(){
-            // console.log("checkShowScrollBtn", this.showScrollButton)
             return this.showScrollButton;
         }
-        // messageListContainerScrollHeight() {
-        //     console.log(this.$refs['conversationMessageList'].scrollHeight)
-        //     return this.$refs['conversationMessageList'].scrollHeight;
-        // }
     },
 
     directives: {

@@ -446,7 +446,6 @@ let store = {
         }
         conversationState.currentConversationInfo = conversationInfo;
         conversationState.shouldAutoScrollToBottom = true;
-        conversationState.forceScrollToBottom = true;
         conversationState.currentConversationMessageList.length = 0;
         this._loadCurrentConversationMessages();
 
@@ -1591,7 +1590,7 @@ let store = {
                 audio.pause();
                 audio.currentTime = 0;
             }
-        }, 600)
+        }, 1000)
     }
 }
 

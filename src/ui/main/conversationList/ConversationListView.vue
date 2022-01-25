@@ -1,5 +1,5 @@
 <template>
-    <section class="conversation-list">
+    <section ref="conversationList" class="conversation-list">
         <ul>
             <li
                 @click="showConversation(conversationInfo)"
@@ -62,6 +62,7 @@ export default {
 
     methods: {
         showConversation(conversationInfo) {
+            this.sharedConversationState.forceScrollToBottom = true;
             store.setCurrentConversationInfo(conversationInfo);
         },
 
@@ -101,10 +102,22 @@ export default {
 
         markConversationAsUnread(conversation) {
             wfc.markConversationAsUnread(conversation, true);
-        }
+        },
+        scrollListTop(){
+            let conversationListElement = this.$refs['conversationList'];
+            if(conversationListElement){
+                conversationListElement.scrollTop = 0;
+            }
+        },
     },
     activated() {
         this.scrollActiveElementCenter();
+        this.$eventBus.$on('scroll-conversation-list-top', () => {
+           this.scrollListTop();
+        });
+    },
+    beforeDestroy(){
+        this.$eventBus.$off('scroll-conversation-list-top')
     },
 
     components: {
