@@ -31,8 +31,10 @@
                 </li> -->
             </ul>
         </div>
-        <div class="footer">
+        <div v-if="isFriend" class="footer">
             <a @click="this.chat">{{ $t('message.send_message') }}</a>
+            <a v-if="!isBlackListed" class="delete-friend" @click="changeFriendBlacklist(true)">{{ $t('friend_request.blacklistFriend') }}</a>
+            <a v-if="isBlackListed" class="delete-friend" @click="changeFriendBlacklist(false)">{{ $t('friend_request.unBlacklistFriend') }}</a>
         </div>
     </section>
 </template>
@@ -41,6 +43,7 @@
 import store from "@/store";
 import ConversationType from "@/wfc/model/conversationType";
 import Conversation from "@/wfc/model/conversation";
+import wfc from "../../../wfc/client/wfc";
 
 export default {
     name: "FriendRequestDetailView",
@@ -56,6 +59,13 @@ export default {
             let conversation = new Conversation(ConversationType.Single, this.sharedStateContact.currentFriendRequest.target, 0);
             store.setCurrentConversation(conversation);
             this.$router.replace('/home');
+        },
+        changeFriendBlacklist(status){
+            wfc.setBlackList(this.sharedStateContact.currentFriendRequest._target.uid, status, () => {
+                this.sharedStateContact.currentFriendRequest = null;
+            }, (error) => {
+                console.log(error)
+            });
         }
     },
     computed: {
@@ -70,6 +80,12 @@ export default {
                 name = friend.name;
             }
             return name;
+        },
+        isFriend() {
+            return this.sharedStateContact.currentFriendRequest.target === wfc.getUserId() || wfc.isMyFriend(this.sharedStateContact.currentFriendRequest.target)
+        },
+        isBlackListed() {
+            return wfc.isBlackListed(this.sharedStateContact.currentFriendRequest.target)
         }
     }
 }
@@ -150,10 +166,14 @@ export default {
     background-color: #20fb64;
     border-radius: 5px;
     border: 1px solid transparent;
+    cursor: pointer;
 }
 
 .footer a:active {
     background-color: red;
 }
-
+a.delete-friend{
+    margin-left: 2rem;
+    background-color: red;
+}
 </style>
