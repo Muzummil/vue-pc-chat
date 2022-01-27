@@ -33,10 +33,14 @@
                                    class="video"
                                    v-bind:style="{transform:!session.isScreenSharing() ? 'scaleX(-1)' :'none','-webkit-transform': !session.isScreenSharing() ? 'scaleX(-1)' :'none'}"
                                    ref="localVideo"
+                                   @click="switchCamera"
                                    :srcObject.prop="selfUserInfo._stream"
                                    playsInline
                                    muted
                                    autoPlay/>
+                            <div v-if="!selfUserInfo._isVideoMuted && !session.isScreenSharing()" class="video-stream-tip-container">
+                                <p>点击视频， 切换摄像头</p>
+                            </div>
                             <div class="info-container">
                                 <i v-if="selfUserInfo._isHost" class="icon-ion-person"></i>
                                 <div>{{ userName(selfUserInfo) }}</div>
@@ -249,6 +253,9 @@ export default {
 
             showParticipantList: false,
             sharedMiscState: store.state.misc,
+            videoInputDeviceIndex: 0,
+
+            refreshUserInfoInternal: 0,
         }
     },
     components: {ScreenShareControlView, UserCardView, ElectronWindowsControlButtonView},
@@ -443,6 +450,26 @@ export default {
             this.session.leaveConference(false);
         },
 
+        switchCamera() {
+            if (!this.session || this.session.isScreenSharing()) {
+                return;
+            }
+            // The order is significant - the default capture devices will be listed first.
+            // navigator.mediaDevices.enumerateDevices()
+            navigator.mediaDevices.enumerateDevices().then(devices => {
+                devices = devices.filter(d => d.kind === 'videoinput');
+                if (devices.length < 2) {
+                    console.log('switchCamera error, no more video input device')
+                    return;
+                }
+                this.videoInputDeviceIndex++;
+                if (this.videoInputDeviceIndex >= devices.length) {
+                    this.videoInputDeviceIndex = 0;
+                }
+                this.session.setVideoInputDeviceId(devices[this.videoInputDeviceIndex].deviceId)
+                console.log('setVideoInputDeviceId', devices[this.videoInputDeviceIndex]);
+            })
+        },
         mute() {
             let enable = this.session.audioMuted ? true : false;
             this.selfUserInfo._isAudioMuted = !enable;
@@ -578,6 +605,33 @@ export default {
             let sec = ~~((timestamp % 60));
             str += (sec < 10 ? "0" : "") + sec
             return str;
+        },
+
+        refreshUserInfos() {
+            let toRefreshUsers = [];
+            this.participantUserInfos.forEach(pu => {
+                if (!pu.updateDt) {
+                    toRefreshUsers = pu.uid;
+                }
+            });
+
+            if (toRefreshUsers.length > 0) {
+                IpcSub.getUserInfos(toRefreshUsers, null, (userInfos) => {
+                    userInfos.forEach(u => {
+                        let index = this.participantUserInfos.findIndex(p => p.uid === u.uid);
+                        if (u.updateDt && index > -1) {
+                            let ou = this.participantUserInfos[index];
+                            u._stream = ou._stream;
+                            u._isAudience = ou._isAudience;
+                            u._isHost = ou._isHost;
+                            u._isVideoMuted = ou._isVideoMuted;
+                            u._isAudioMuted = ou._isAudioMuted;
+                            u._volume = ou._volume;
+                            this.participantUserInfos[index] = u;
+                        }
+                    })
+                })
+            }
         }
     },
 
@@ -612,34 +666,37 @@ export default {
     },
 
     watch: {
-        participantUserInfos(infos) {
-            if (this.audioOnly) {
-                return;
-            }
-            let videoParticipants = infos.filter(u => !u.audience)
-            let count = videoParticipants.length;
-            if (!this.selfUserInfo._isAudience) {
-                count++;
-            }
-            let width = '100%';
-            let height = '100%';
-            if (count <= 1) {
-                width = '100%';
-                height = '100%';
-            } else if (count <= 4) {
-                width = '50%';
-                height = '45%';
-            } else if (count <= 9) {
-                width = '33%';
-                height = '33%'
-            } else {
-                // max 16
-                width = '25%';
-                height = '25%'
-            }
-            if (this.$refs.contentContainer) {
-                this.$refs.contentContainer.style.setProperty('--participant-video-item-width', width);
-                this.$refs.contentContainer.style.setProperty('--participant-video-item-height', height);
+        participantUserInfos: {
+            deep: true,
+            handler(infos) {
+                if (this.audioOnly) {
+                    return;
+                }
+                let videoParticipants = infos.filter(u => !u._isAudience)
+                let count = videoParticipants.length;
+                if (!this.selfUserInfo._isAudience) {
+                    count++;
+                }
+                let width = '100%';
+                let height = '100%';
+                if (count <= 1) {
+                    width = '100%';
+                    height = '100%';
+                } else if (count <= 4) {
+                    width = '50%';
+                    height = '45%';
+                } else if (count <= 9) {
+                    width = '33%';
+                    height = '33%'
+                } else {
+                    // max 16
+                    width = '25%';
+                    height = '25%'
+                }
+                if (this.$refs.contentContainer) {
+                    this.$refs.contentContainer.style.setProperty('--participant-video-item-width', width);
+                    this.$refs.contentContainer.style.setProperty('--participant-video-item-height', height);
+                }
             }
         }
     },
@@ -650,6 +707,9 @@ export default {
 
     created() {
         document.title = '在线会议';
+        this.refreshUserInfoInternal = setInterval(() => {
+            this.refreshUserInfos();
+        }, 3 * 1000)
     },
 
     mounted() {
@@ -668,7 +728,7 @@ export default {
             //     this.$forceUpdate();
             // })
             window.addEventListener("mousemove", (event) => {
-                if (!this.session.isScreenSharing()) {
+                if (!this.session || !this.session.isScreenSharing()) {
                     return;
                 }
                 this.ddd = event.target.id;
@@ -691,6 +751,7 @@ export default {
         // reset
         this.$set(this.selfUserInfo, '_stream', null)
         this.participantUserInfos.forEach(m => this.$set(m, "_stream", null))
+        clearInterval(this.refreshUserInfoInternal);
     }
 }
 </script>

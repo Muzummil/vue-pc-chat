@@ -25,6 +25,11 @@ import pkg from '../package.json';
 import Badge from 'electron-windows-badge';
 import {createProtocol} from "vue-cli-plugin-electron-builder/lib";
 import IPCRendererEventType from "./ipcRendererEventType";
+import nodePath from 'path'
+
+
+console.log('start crash report', app.getPath('crashDumps'))
+crashReporter.start({uploadToServer:false});
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
