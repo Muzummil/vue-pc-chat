@@ -623,7 +623,9 @@ export default {
         scrollToBottom(){
             let messageListElement = this.$refs['conversationMessageList'];
             if(messageListElement){
-                messageListElement.scroll({top: messageListElement.scrollHeight + 100000, left: 0, behavior: 'smooth'})
+                setTimeout(() => {
+                    messageListElement.scrollTop = messageListElement.scrollHeight + 100000;
+                }, 10);
             }
         }
     },
@@ -680,7 +682,6 @@ export default {
     },
 
     beforeUpdate(){
-        console.log("BEFORE UPDATED", this.sharedConversationState.forceScrollToBottom);
         if(this.sharedConversationState.forceScrollToBottom){
             this.scrollToBottom();
         }
