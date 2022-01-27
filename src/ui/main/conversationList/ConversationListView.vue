@@ -4,6 +4,7 @@
             <li
                 @click="showConversation(conversationInfo)"
                 v-for="conversationInfo in sharedConversationState.conversationInfoList"
+                :ref="conversationInfo.timestamp"
                 :key="conversationInfoKey(conversationInfo)"
                 v-bind:class="{active: sharedConversationState.currentConversationInfo && sharedConversationState.currentConversationInfo.conversation.equal(conversationInfo.conversation),
                           top:conversationInfo.isTop,
@@ -103,17 +104,31 @@ export default {
         markConversationAsUnread(conversation) {
             wfc.markConversationAsUnread(conversation, true);
         },
-        scrollListTop(){
-            let conversationListElement = this.$refs['conversationList'];
-            if(conversationListElement){
-                conversationListElement.scrollTop = 0;
+        scrollToUnreadConversation(){
+            let firstUnreadConversationId = null;
+            let firstUnreadConversationIndex = null;
+            const conversationList = this.sharedConversationState.conversationInfoList;
+            if(conversationList){
+                for(let i=0; i < conversationList.length; i++ ) {
+                    if (conversationList[i]['_unread'] > 0 ) {
+                        firstUnreadConversationId = conversationList[i].timestamp;
+                        firstUnreadConversationIndex = i;
+                        break;
+                    }
+                }
+            }
+            
+            let firstUnreadConversationElement = this.$refs[firstUnreadConversationId] && this.$refs[firstUnreadConversationId][0];
+            if(firstUnreadConversationElement){
+                let conversationListElement = this.$refs['conversationList'];
+                conversationListElement.scrollTop = firstUnreadConversationElement.scrollHeight * firstUnreadConversationIndex;
             }
         },
     },
     activated() {
         this.scrollActiveElementCenter();
         this.$eventBus.$on('scroll-conversation-list-top', () => {
-           this.scrollListTop();
+           this.scrollToUnreadConversation();
         });
     },
     beforeDestroy(){
