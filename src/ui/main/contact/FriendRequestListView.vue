@@ -21,34 +21,41 @@
                                     </div>
                                 </div>
                                 <!-- End User details part -->
-
-                                <!-- Start User action -->
-                                <div v-if="friendRequest.status === 0" class="user-action-container">
-                                    <div class="accept-btn">
-                                        <button class="action-btn"
-                                            @click="accept(friendRequest)">{{ $t('common.add') }}
-                                        </button>
+                                <!-- AA{{isFriend}}
+                                BB{{friendRequest.status}} -->
+                                <!-- <div v-if="!isFriend"> -->
+                                     <!-- Start User action -->
+                                     <!-- <div v-if="isFriend && friendRequest.status === 0" class="req-feedback name-action username">
+                                        <span class="status">{{
+                                                $t('friend_request.accepted')
+                                            }}</span>
+                                    </div> -->
+                                    <div v-if="friendRequest.status === 0" class="user-action-container">
+                                        <div class="accept-btn">
+                                            <button class="action-btn"
+                                                @click="accept(friendRequest)">{{ $t('common.add') }}
+                                            </button>
+                                        </div>
+                                        <div class="reject-btn">
+                                            <button class="action-btn reject"
+                                                @click="reject(friendRequest)">{{ $t('common.reject') }}
+                                            </button>
+                                        </div>
                                     </div>
-                                    <div class="reject-btn">
-                                        <button class="action-btn reject"
-                                            @click="reject(friendRequest)">{{ $t('common.reject') }}
-                                        </button>
+                                    <!-- End User action part -->
+                                    
+                                    <!-- Start req feedback -->
+                                    <div v-else class="req-feedback name-action username">
+                                        <span v-if="friendRequest.status === 3 || friendRequest.status === 2" class="status">{{
+                                                $t('friend_request.denied')
+                                            }}</span>
+                                        <span v-if="friendRequest.status === 1" class="status">{{
+                                                $t('friend_request.accepted')
+                                            }}</span>
                                     </div>
+                                    <!-- End req feedback -->
                                 </div>
-                                <!-- End User action part -->
-                                
-                                <!-- Start req feedback -->
-                                
-                                <div v-else class="req-feedback name-action username">
-                                    <span v-if="friendRequest.status === 3 || friendRequest.status === 2" class="status">{{
-                                            $t('friend_request.denied')
-                                        }}</span>
-                                    <span v-if="friendRequest.status === 1" class="status">{{
-                                            $t('friend_request.accepted')
-                                        }}</span>
-                                </div>
-                                <!-- End req feedback -->
-                            </div>
+                            <!-- </div> -->
                             
 
 
@@ -116,7 +123,16 @@ export default {
                 console.log('reject friend request error', err)
             })
         }
-    }
+    },
+    computed: {
+        isFriend() {
+            if(this.sharedContactState.currentFriendRequest){
+                return this.sharedContactState.currentFriendRequest.target === wfc.getUserId() || wfc.isMyFriend(this.sharedContactState.currentFriendRequest.target)
+            }
+
+            return true;
+        }
+    },
 }
 </script>
 
