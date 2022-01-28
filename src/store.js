@@ -561,6 +561,10 @@ let store = {
         conversationState.shouldAutoScrollToBottom = scroll;
     },
 
+    setForceScrollToBottom(scroll) {
+        conversationState.forceScrollToBottom = scroll;
+    },
+
     /**
      *
      * @param src {String} 媒体url

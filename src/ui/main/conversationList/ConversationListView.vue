@@ -63,7 +63,7 @@ export default {
 
     methods: {
         showConversation(conversationInfo) {
-            this.sharedConversationState.forceScrollToBottom = true;
+            store.setForceScrollToBottom(true);
             store.setCurrentConversationInfo(conversationInfo);
         },
 
@@ -105,28 +105,37 @@ export default {
             wfc.markConversationAsUnread(conversation, true);
         },
         scrollToUnreadConversation(){
-            let firstUnreadConversationId = null;
+            let firstUnreadConversation = null;
             let firstUnreadConversationIndex = null;
             const conversationList = this.sharedConversationState.conversationInfoList;
             if(conversationList){
                 for(let i=0; i < conversationList.length; i++ ) {
                     if (conversationList[i]['_unread'] > 0 ) {
-                        firstUnreadConversationId = conversationList[i].timestamp;
+                        firstUnreadConversation = conversationList[i];
                         firstUnreadConversationIndex = i;
                         break;
                     }
                 }
             }
-            
-            let firstUnreadConversationElement = this.$refs[firstUnreadConversationId] && this.$refs[firstUnreadConversationId][0];
+            let firstUnreadConversationElement;
+            if(firstUnreadConversation){
+                store.setCurrentConversationInfo(firstUnreadConversation);
+                firstUnreadConversationElement = this.$refs[firstUnreadConversation.timestamp] && this.$refs[firstUnreadConversation.timestamp][0];
+            }else{
+                firstUnreadConversation = conversationList[0];
+                store.setCurrentConversationInfo(firstUnreadConversation);
+                firstUnreadConversationElement = this.$refs[firstUnreadConversation.timestamp] && this.$refs[firstUnreadConversation.timestamp][0];
+            }
+            this.sharedConversationState.forceScrollToBottom = true;
             if(firstUnreadConversationElement){
                 let conversationListElement = this.$refs['conversationList'];
                 conversationListElement.scrollTop = firstUnreadConversationElement.scrollHeight * firstUnreadConversationIndex;
             }
+            console.log("FORCE", this.sharedConversationState.forceScrollToBottom)
         },
     },
     activated() {
-        this.scrollActiveElementCenter();
+        // this.scrollActiveElementCenter();
         this.$eventBus.$on('scroll-conversation-list-top', () => {
            this.scrollToUnreadConversation();
         });
