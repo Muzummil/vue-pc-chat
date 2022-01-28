@@ -28,8 +28,8 @@ import IPCRendererEventType from "./ipcRendererEventType";
 import nodePath from 'path'
 
 
-console.log('start crash report', app.getPath('crashDumps'))
-crashReporter.start({uploadToServer:false});
+// console.log('start crash report', app.getPath('crashDumps'))
+// crashReporter.start({uploadToServer:false});
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([

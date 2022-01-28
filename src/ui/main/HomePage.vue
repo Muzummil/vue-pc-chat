@@ -37,9 +37,9 @@
                         <li>
                             <div class="menu-item">
                                 <img class="icon-img" v-if="this.$router.currentRoute.path === '/home'"
-                                 @click="go2Conversation" src="../../assets/icons/messages-active-icon.svg" alt="contact" >
+                                 @click="detectConversationClickCounts" src="../../assets/icons/messages-active-icon.svg" alt="contact" >
                                 <img class="icon-img" v-else
-                                 @click="go2Conversation" src="../../assets/icons/messages-icon.svg" alt="contact" >
+                                 @click="detectConversationClickCounts" src="../../assets/icons/messages-icon.svg" alt="contact" >
 
                                 <!-- <i class="icon-ion-ios-chatboxes"
                                    v-bind:class="{active : this.$router.currentRoute.path === '/home'}"
@@ -165,20 +165,41 @@ export default {
                 boundingElement: undefined,
                 resetInitialPos: true,
             },
-            onloadFriendReqCount: 0
+            onloadFriendReqCount: 0,
+            numClicks:0
         };
     },
 
     methods: {
+        detectConversationClickCounts: function() {
+            this.numClicks++;
+            if (this.numClicks === 1) {          // the first click in .2s
+                var self = this;
+                setTimeout(function() {
+                    if(self.numClicks > 1){
+                        self.$eventBus.$emit('scroll-conversation-list-top', true);
+                    }
+                    self.$eventBus.$emit('force-scroll-conversation-bottom', true);
+                    store.setForceScrollToBottom(true);
+                    self.numClicks = 0;
+                    if (self.$router.currentRoute.path === '/home') {
+                        return
+                    }
+                    if (self.$router.currentRoute.path === '/home') {
+                        return
+                    }else{
+                        self.$router.replace("/home");
+                        self.isSetting = false;
+                    }
+                    
+                }, 200);
+            }
+        } ,
         onClickPortrait() {
             wfc.getUserInfo(this.sharedContactState.selfUserInfo.uid, true);
         },
         go2Conversation() {
             // Used event bus bcz state change from here was not updating in all the cases in conversationList component
-            this.$eventBus.$emit('scroll-conversation-list-top', true);
-            if (this.$router.currentRoute.path === '/home') {
-                return
-            }
             this.$router.replace("/home");
             this.isSetting = false;
         },

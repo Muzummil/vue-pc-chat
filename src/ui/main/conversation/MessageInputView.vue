@@ -197,6 +197,7 @@ export default {
             // this.$refs['input'].textContent = '';
             // // 发送消息时，会话消息列表需要滚动到最后
             store.setShouldAutoScrollToBottom(true)
+            store.setForceScrollToBottom(true);
             //
             // let textMessageContent = this.handleMention(text)
             // let conversation = this.conversationInfo.conversation;
@@ -248,17 +249,14 @@ export default {
                         let file;
                         try{
                             if (isElectron()) {
-                                debugger
                                 file = src.substring(17, src.length);
                             } else {
                                 file = fileFromDataUri(src, new Date().getTime() + '.png');
                             }
-                            debugger
                             this.$eventBus.$emit('uploadFile', file)
                             store.sendFile(this.conversationInfo.conversation, file)
                             // 会影响 input.getElementsByTagName 返回的数组，所以上面拷贝了一下
                             img.parentNode.removeChild(img);
-                            debugger
                         }catch(e){
                             console.log(e)
                         }
@@ -279,7 +277,6 @@ export default {
             if(isEmoji){
                 this.sendTextMessage(message, conversation)
             }
-            debugger
             input.innerHTML = '';
             store.quoteMessage(null);
             Draft.setConversationDraft(conversation, '', null, null);
@@ -461,6 +458,8 @@ export default {
             // }
             this.$eventBus.$emit('uploadFile', file)
             store.sendFile(this.conversationInfo.conversation, file);
+            store.setShouldAutoScrollToBottom(true)
+            store.setForceScrollToBottom(true);
         },
 
         initEmojiPicker() {
@@ -551,6 +550,9 @@ export default {
             this.$nextTick(() => {
                 this.$refs['input'].focus();
                 console.log('focus end')
+                setTimeout(() => {
+                    store.setForceScrollToBottom(true);
+                }, 10);
             })
         },
 

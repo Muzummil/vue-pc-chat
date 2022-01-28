@@ -38,17 +38,19 @@
                         <!--todo item.messageId or messageUid as key-->
                         <li v-for="(message) in sharedConversationState.currentConversationMessageList"
                             :key="message.messageId">
-                            <!--todo 不同的消息类型 notification in out-->
-
-                            <NotificationMessageContentView :message="message" v-if="isNotificationMessage(message)"/>
-                            <NormalOutMessageContentView
-                                @click.native.capture="sharedConversationState.enableMessageMultiSelection? clickMessageItem($event, message) : null"
-                                :message="message"
-                                v-else-if="message.direction === 0"/>
-                            <NormalInMessageContentView
-                                @click.native.capture="sharedConversationState.enableMessageMultiSelection ? clickMessageItem($event, message) : null"
-                                :message="message"
-                                v-else/>
+                            <div v-if="message.messageId > 0">
+                                <!--todo 不同的消息类型 notification in out-->
+                                <NotificationMessageContentView :message="message" v-if="isNotificationMessage(message)"/>
+                                <NormalOutMessageContentView
+                                    @click.native.capture="sharedConversationState.enableMessageMultiSelection? clickMessageItem($event, message) : null"
+                                    :message="message"
+                                    v-else-if="message.direction === 0"/>
+                                <NormalInMessageContentView
+                                    @click.native.capture="sharedConversationState.enableMessageMultiSelection ? clickMessageItem($event, message) : null"
+                                    :message="message"
+                                    v-else/>
+                            </div>
+                            
                         </li>
                     </ul>
                 </div>
@@ -194,6 +196,9 @@ export default {
 
     activated() {
         this.fixTippy = true;
+        this.$eventBus.$on('force-scroll-conversation-bottom', args=> {
+            this.scrollToBottom();
+        })
     },
 
     deactivated() {
@@ -294,7 +299,7 @@ export default {
 
         onScroll(e) {
             
-            this.sharedConversationState.forceScrollToBottom = false;
+            store.setForceScrollToBottom(false);
             this.checkShowScrollBtn();
             // hide tippy userCard
             for (const popper of document.querySelectorAll('.tippy-popper')) {
@@ -308,7 +313,7 @@ export default {
 
             // 当用户往上滑动一段距离之后，收到新消息，不自动滚到到最后
             if (e.target.scrollHeight > e.target.clientHeight + e.target.scrollTop + e.target.clientHeight / 2) {
-                store.setShouldAutoScrollToBottom(false)
+                // store.setShouldAutoScrollToBottom(false)
             } else {
                 store.setShouldAutoScrollToBottom(true)
             }
@@ -682,6 +687,7 @@ export default {
     },
 
     beforeUpdate(){
+        console.log("BEFORE UPDATE", this.sharedConversationState.forceScrollToBottom)
         if(this.sharedConversationState.forceScrollToBottom){
             this.scrollToBottom();
         }
