@@ -720,7 +720,6 @@ let store = {
                 }
                 xhr.send(file);
             }
-            debugger
 
             miscState.uploadBigFiles.push({
                 remoteUrl: remoteUrl,
@@ -732,7 +731,6 @@ let store = {
                 progress: 0,
                 xhr: xhr,
             });
-            debugger
         }, (e) => {
             console.log('getUploadMediaUrl e', e)
         })
@@ -753,7 +751,6 @@ let store = {
         try {
 
             console.log('send file', file)
-            debugger
             if (file.size && file.size > 100 * 1024 * 1024) {
                 if (wfc.isSupportBigFilesUpload()) {
                     this.sendBigFile(conversation, file);
@@ -778,7 +775,6 @@ let store = {
             } else {
                 fileOrLocalPath = file;
             }
-            debugger
             let msg = new Message();
             msg.conversation = conversation;
 

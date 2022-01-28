@@ -63,7 +63,6 @@ export default {
 
     methods: {
         showConversation(conversationInfo) {
-            store.setForceScrollToBottom(true);
             store.setCurrentConversationInfo(conversationInfo);
         },
 
@@ -126,17 +125,18 @@ export default {
                 store.setCurrentConversationInfo(firstUnreadConversation);
                 firstUnreadConversationElement = this.$refs[firstUnreadConversation.timestamp] && this.$refs[firstUnreadConversation.timestamp][0];
             }
-            this.sharedConversationState.forceScrollToBottom = true;
             if(firstUnreadConversationElement){
                 let conversationListElement = this.$refs['conversationList'];
                 conversationListElement.scrollTop = firstUnreadConversationElement.scrollHeight * firstUnreadConversationIndex;
             }
+            store.setForceScrollToBottom(true);
             console.log("FORCE", this.sharedConversationState.forceScrollToBottom)
         },
     },
     activated() {
-        // this.scrollActiveElementCenter();
+        store.setForceScrollToBottom(true);
         this.$eventBus.$on('scroll-conversation-list-top', () => {
+            console.log("IN EVN");
            this.scrollToUnreadConversation();
         });
     },

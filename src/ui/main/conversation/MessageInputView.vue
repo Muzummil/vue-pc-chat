@@ -458,6 +458,8 @@ export default {
             // }
             this.$eventBus.$emit('uploadFile', file)
             store.sendFile(this.conversationInfo.conversation, file);
+            store.setShouldAutoScrollToBottom(true)
+            store.setForceScrollToBottom(true);
         },
 
         initEmojiPicker() {
@@ -548,6 +550,9 @@ export default {
             this.$nextTick(() => {
                 this.$refs['input'].focus();
                 console.log('focus end')
+                setTimeout(() => {
+                    store.setForceScrollToBottom(true);
+                }, 10);
             })
         },
 
