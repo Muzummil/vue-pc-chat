@@ -39,7 +39,6 @@
                         <li v-for="(message) in sharedConversationState.currentConversationMessageList"
                             :key="message.messageId">
                             <!--todo 不同的消息类型 notification in out-->
-
                             <NotificationMessageContentView :message="message" v-if="isNotificationMessage(message)"/>
                             <NormalOutMessageContentView
                                 @click.native.capture="sharedConversationState.enableMessageMultiSelection? clickMessageItem($event, message) : null"
@@ -294,7 +293,7 @@ export default {
 
         onScroll(e) {
             
-            this.sharedConversationState.forceScrollToBottom = false;
+            store.setForceScrollToBottom(false);
             this.checkShowScrollBtn();
             // hide tippy userCard
             for (const popper of document.querySelectorAll('.tippy-popper')) {
@@ -622,6 +621,7 @@ export default {
         },
         scrollToBottom(){
             let messageListElement = this.$refs['conversationMessageList'];
+            debugger
             if(messageListElement){
                 setTimeout(() => {
                     messageListElement.scrollTop = messageListElement.scrollHeight + 100000;
@@ -682,6 +682,7 @@ export default {
     },
 
     beforeUpdate(){
+        console.log("BEFORE UPDATE", this.sharedConversationState.forceScrollToBottom)
         if(this.sharedConversationState.forceScrollToBottom){
             this.scrollToBottom();
         }

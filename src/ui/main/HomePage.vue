@@ -176,6 +176,7 @@ export default {
         go2Conversation() {
             // Used event bus bcz state change from here was not updating in all the cases in conversationList component
             this.$eventBus.$emit('scroll-conversation-list-top', true);
+            store.setForceScrollToBottom(true);
             if (this.$router.currentRoute.path === '/home') {
                 return
             }
