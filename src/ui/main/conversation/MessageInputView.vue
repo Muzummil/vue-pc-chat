@@ -660,7 +660,7 @@ export default {
 
         if (isElectron()) {
             ipcRenderer.on('screenshots-ok', (event, args) => {
-                console.log('screenshots-ok', args)
+                // console.log('screenshots-ok', args)
                 if (args.filePath) {
                     // setTimeout(() => {
                         document.execCommand('insertImage', false, 'local-resource://' + args.filePath);
