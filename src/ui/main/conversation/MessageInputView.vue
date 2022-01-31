@@ -662,9 +662,9 @@ export default {
             ipcRenderer.on('screenshots-ok', (event, args) => {
                 console.log('screenshots-ok', args)
                 if (args.filePath) {
-                    setTimeout(() => {
+                    // setTimeout(() => {
                         document.execCommand('insertImage', false, 'local-resource://' + args.filePath);
-                    }, 100)
+                    // }, 100)
                 }
             });
         }

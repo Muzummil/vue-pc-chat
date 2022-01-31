@@ -35,10 +35,9 @@
                         <template slot="no-results">{{ $t('conversation.all_message_load') }}</template>
                     </infinite-loading>
                     <ul>
-                        <!--todo item.messageId or messageUid as key-->
                         <li v-for="(message) in sharedConversationState.currentConversationMessageList"
                             :key="message.messageId">
-                            <div v-if="message.messageId > 0">
+                            <template v-if="message.messageId > 0">
                                 <!--todo 不同的消息类型 notification in out-->
                                 <NotificationMessageContentView :message="message" v-if="isNotificationMessage(message)"/>
                                 <NormalOutMessageContentView
@@ -49,7 +48,7 @@
                                     @click.native.capture="sharedConversationState.enableMessageMultiSelection ? clickMessageItem($event, message) : null"
                                     :message="message"
                                     v-else/>
-                            </div>
+                            </template>
                             
                         </li>
                     </ul>
