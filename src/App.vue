@@ -27,13 +27,23 @@
         </div>
 
         
-
-        <CoolLightBox
-            :items="sharedConversationState.previewMediaItems"
-            :index="sharedConversationState.previewMediaIndex"
-            :slideshow="false"
-            @close="sharedConversationState.previewMediaIndex = null">
-        </CoolLightBox>
+        <template v-if="sharedConversationState.useNewLibImagePreview && sharedConversationState.previewMediaIndex !== null">
+            <viewer :options="viewerOptions" :images="sharedConversationState.previewMediaItems"
+                @inited="inited"
+                class="viewer" ref="viewer"
+            >
+                <img v-for="(imgObj) in sharedConversationState.previewMediaItems" :src="imgObj.src" :key="imgObj.src">
+            </viewer>
+        </template>
+        <template v-else>
+            <CoolLightBox
+                :items="sharedConversationState.previewMediaItems"
+                :index="sharedConversationState.previewMediaIndex"
+                :slideshow="false"
+                @close="sharedConversationState.previewMediaIndex = null">
+            </CoolLightBox>
+        </template>
+        
 
         <notifications/>
         <IpcMain/>
@@ -50,14 +60,36 @@ import './twemoji'
 import IpcMain from "./ipc/ipcMain";
 import {currentWindow} from "./platform";
 
+import 'viewerjs/dist/viewer.css';
+import { component as Viewer } from "v-viewer"
+import VueViewer from 'v-viewer'
+import Vue from 'vue'
+Vue.use(VueViewer)
 export default {
     name: 'App',
+    components: {
+      Viewer
+    },
     data() {
         return {
             url: '',
             sharedMiscState: store.state.misc,
             sharedConversationState: store.state.conversation,
-            scale: 2
+            scale: 2,
+            previewHiddenOnLoad: true,
+            viewerOptions: {
+                toolbar: true, 
+                zoomable: true, 
+                fullscreen: true, 
+                zoomOnWheel: true, 
+                transition: true,
+                hidden (e) {
+                    if(e){
+                        store.unSetPreviewMessageState();
+                    }
+                    // this.sharedConversationState.previewMediaIndex = null;
+                }
+            }
         }
     },
     methods: {
@@ -69,9 +101,10 @@ export default {
         },
         onfocus() {
             store.setPageVisibility(true);
+            this.previewHiddenOnLoad = true;
         },
-        scalingHandler(e) {
-            console.log(e);
+        inited(viewer) {
+          this.$viewer = viewer
         },
         
     },
@@ -124,11 +157,21 @@ export default {
                 });
             }
         })
+        this.previewHiddenOnLoad = false;
     },
     beforeDestroy() {
         this.$eventBus.$off('uploadFile');
         window.removeEventListener('blur', this.onblur)
         window.removeEventListener('focus', this.onfocus)
+    },
+    updated(){
+        setTimeout(() => {
+            if(this.sharedConversationState.useNewLibImagePreview && this.sharedConversationState.previewMediaIndex !== null){
+                this.$viewer.show();
+                this.$viewer.view((this.sharedConversationState.previewMediaIndex))
+            }
+        }, 10);
+        
     },
 
     components: {
