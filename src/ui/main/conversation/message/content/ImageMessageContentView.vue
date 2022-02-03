@@ -1,9 +1,9 @@
 <template>
     <div class="image-content-container">
         <div v-if="message.messageContent.type == ImageMessageContentType">
-            <viewer :options="viewerOptions" class="images clearfix">
-                <img :src="message.content.remoteMediaUrl || message.content.localMediaPath" class="image" @load="onImageLoaded">
-            </viewer>
+            <!-- <viewer :options="viewerOptions" class="images clearfix"> -->
+                <img  @click="preview(message, true)" :src="message.content.remoteMediaUrl || message.content.localMediaPath" class="image" @load="onImageLoaded">
+            <!-- </viewer> -->
         </div>
         <div v-else>
             <img v-show="imageLoaded === false" @click="preview(message)"
@@ -20,10 +20,6 @@ import Message from "@/wfc/messages/message";
 import store from "@/store";
 import MessageContentType from "@/wfc/messages/messageContentType";
 
-import Vue from "vue";
-import Viewer from "v-viewer";
-import "viewerjs/dist/viewer.css";
-Vue.use(Viewer);
 export default {
     name: "ImageMessageContentView",
     props: {
@@ -36,19 +32,11 @@ export default {
         return {
             imageLoaded: false,
             ImageMessageContentType: MessageContentType.Image,
-            viewerOptions: {
-                toolbar: true, 
-                zoomable: true, 
-                fullscreen: true, 
-                zoomOnWheel: true, 
-                transition: true,
-            }
         }
     },
     methods: {
-        preview(message) {
-            console.log('preview', message);
-            store.previewMessage(message, true);
+        preview(message, useNewLibImagePreview = false) {
+            store.previewMessage(message, true, useNewLibImagePreview);
         },
         onImageLoaded() {
             this.imageLoaded = true

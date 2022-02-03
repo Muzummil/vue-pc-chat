@@ -53,8 +53,8 @@
                         </li>
                     </ul>
                 </div>
-                <div v-if="checkShowScrollBtnComp" @click="scrollToBottom" class="scroll-bottom-btn">
-                    <img src="../../../assets/images/scroll-down.svg">
+                <div v-if="checkShowScrollBtnComp" class="scroll-bottom-btn">
+                    <img @click="scrollToBottom" src="../../../assets/images/scroll-down.svg">
                     <!-- <i class="icon-ion-ios-arrow-round-down"></i> -->
                 </div>
                 <div v-if="sharedConversationState.inputtingUser" class="inputting-container">

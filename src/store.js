@@ -601,22 +601,38 @@ let store = {
      * @param message
      * @param {Boolean} continuous  true，预览周围的媒体消息；false，只预览第一个参数传入的那条媒体消息
      */
-    previewMessage(message, continuous) {
+    previewMessage(message, continuous, useNewLibImagePreview = false) {
         conversationState.previewMediaItems.length = 0;
+        conversationState.useNewLibImagePreview = useNewLibImagePreview;
         conversationState.previewMediaIndex = null;
         if (continuous) {
-            let mediaMsgs = conversationState.currentConversationMessageList.filter(m => [MessageContentType.Image, MessageContentType.Video].indexOf(m.messageContent.type) > -1)
+            let mediaMsgs;
+            if(useNewLibImagePreview){
+                mediaMsgs = conversationState.currentConversationMessageList.filter(m => [MessageContentType.Image].indexOf(m.messageContent.type) > -1)
+            }else{
+                mediaMsgs = conversationState.currentConversationMessageList.filter(m => [MessageContentType.Image, MessageContentType.Video].indexOf(m.messageContent.type) > -1)
+            }
             let msg;
             for (let i = 0; i < mediaMsgs.length; i++) {
                 msg = mediaMsgs[i];
                 if (msg.messageId === message.messageId) {
                     conversationState.previewMediaIndex = i;
                 }
-                conversationState.previewMediaItems.push({
-                    src: msg.messageContent.remotePath,
-                    thumb: 'data:image/png;base64,' + msg.messageContent.thumbnail,
-                    autoplay: true,
-                });
+                if(useNewLibImagePreview){
+                    if(msg.messageContent.type == MessageContentType.Image){
+                        conversationState.previewMediaItems.push({
+                            src: msg.messageContent.remotePath,
+                            thumb: 'data:image/png;base64,' + msg.messageContent.thumbnail,
+                            autoplay: true,
+                        });
+                    }
+                }else{
+                    conversationState.previewMediaItems.push({
+                        src: msg.messageContent.remotePath,
+                        thumb: 'data:image/png;base64,' + msg.messageContent.thumbnail,
+                        autoplay: true,
+                    });
+                }
             }
         } else {
             conversationState.previewMediaIndex = 0;
@@ -626,6 +642,12 @@ let store = {
                 autoplay: true,
             });
         }
+    },
+    
+    unSetPreviewMessageState(){
+        // conversationState.previewMediaItems.length = 0;
+        // conversationState.previewMediaItems = null;
+        conversationState.previewMediaIndex = null;
     },
 
     cancelUploadBigFile(remoteUrl) {
