@@ -6,9 +6,9 @@
             <!-- </viewer> -->
         </div>
         <div v-else>
-            <img v-show="imageLoaded === false" @click="preview(message)"
+            <img v-show="imageLoaded === false" @click="preview(message, true)"
                 v-bind:src="'data:video/jpeg;base64,' + message.messageContent.thumbnail">
-            <img v-show="imageLoaded" @click="preview(message)" @load="onImageLoaded"
+            <img v-show="imageLoaded" @click="preview(message, true)" @load="onImageLoaded"
                 draggable="true" v-bind:src="message.messageContent.remotePath">
         </div>
         

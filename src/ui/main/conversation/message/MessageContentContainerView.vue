@@ -1,5 +1,5 @@
 <template>
-    <TextMessageContentView :message="message"
+        <TextMessageContentView :message="message"
                             v-if="message.messageContent.type === 1"
                             :style="{'--out-arrow-color':'#98ea70', '--in-arrow-color':'white'}"
                             v-bind:class="{leftarrow:message.direction === 1, rightarrow: message.direction === 0}"/>
@@ -15,7 +15,9 @@
                              v-else-if="message.messageContent.type === 6"/>
     <!--                           v-bind:class="{leftarrow:message.direction === 1, rightarrow: message.direction === 0}"/>-->
     <StickerMessageContentView :message="message"
-                               v-else-if="message.messageContent.type === 7"/>
+                               v-else-if="message.messageContent.type === 7 "/>
+    <DiceMessageContentViewVue :message="message"
+                               v-else-if="message.messageContent.type === 13"/>
     <CompositeMessageContentView :message="message"
                                  v-else-if="message.messageContent.type === 11"/>
     <CallStartMessageContentView :message="message"
@@ -52,6 +54,7 @@ import CompositeMessageContentView from "@/ui/main/conversation/message/content/
 import UserCardMessageContentView from "./content/UserCardMessageContentView";
 import ConferenceInviteMessageContentView from "./content/ConferenceInviteMessageContentView";
 import UnknowntMessageContentView from "./content/UnknownMessageContentView";
+import DiceMessageContentViewVue from './content/DiceMessageContentView.vue';
 
 export default {
     name: "MessageContentContainerView",
@@ -73,7 +76,8 @@ export default {
         VideoMessageContentView,
         FileMessageContentView,
         StickerMessageContentView,
-        UserCardMessageContentView
+        UserCardMessageContentView,
+        DiceMessageContentViewVue
     }
 }
 </script>

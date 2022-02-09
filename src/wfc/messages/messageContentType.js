@@ -19,6 +19,7 @@ export default class MessageContentType {
     static P_Text = 9;
     static UserCard = 10;
     static Composite_Message = 11;
+    static MESSAGE_CONTENT_TYPE_DICE_ROTATE = 13;
 
     static Mark_Unread_Sync = 31;
 

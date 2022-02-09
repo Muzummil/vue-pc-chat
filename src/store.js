@@ -187,54 +187,56 @@ let store = {
                 this._loadDefaultConversationList();
             }
             if (conversationState.currentConversationInfo && msg.conversation.equal(conversationState.currentConversationInfo.conversation)) {
-                if (msg.messageContent instanceof DismissGroupNotification
-                    || (msg.messageContent instanceof KickoffGroupMemberNotification && msg.messageContent.kickedMembers.indexOf(wfc.getUserId()) >= 0)
-                    || (msg.messageContent instanceof QuitGroupNotification && msg.messageContent.operator === wfc.getUserId())
-                ) {
-                    this.setCurrentConversationInfo(null);
-                    return;
-                }
-                // 移动端，目前只有单聊会发送typing消息
-                if (msg.messageContent.type === MessageContentType.Typing) {
-                    let groupId = msg.conversation.type === 1 ? msg.conversation.target : '';
-                    let userInfo = wfc.getUserInfo(msg.from, groupId)
-                    userInfo = Object.assign({}, userInfo);
-                    userInfo._displayName = wfc.getGroupMemberDisplayNameEx(userInfo);
-                    conversationState.inputtingUser = userInfo;
-
-                    if (!conversationState.inputClearHandler) {
-                        conversationState.inputClearHandler = () => {
-                            conversationState.inputtingUser = null;
-                        }
+                try{
+                    if (msg.messageContent instanceof DismissGroupNotification
+                        || (msg.messageContent instanceof KickoffGroupMemberNotification && msg.messageContent.kickedMembers.indexOf(wfc.getUserId()) >= 0)
+                        || (msg.messageContent instanceof QuitGroupNotification && msg.messageContent.operator === wfc.getUserId())
+                    ) {
+                        this.setCurrentConversationInfo(null);
+                        return;
                     }
-                    clearTimeout(conversationState.inputClearHandler);
-                    setTimeout(conversationState.inputClearHandler, 3000)
-                } else {
-                    clearTimeout(conversationState.inputClearHandler);
-                    conversationState.inputtingUser = null;
-                }
-
-                if (!this._isDisplayMessage(msg)) {
-                    return;
-                }
-                let msgIndex = conversationState.currentConversationMessageList.findIndex(m => {
-                    return m.messageId === msg.messageId;
-                });
-                if (msgIndex > -1) {
-                    console.log('msg duplicate')
-                    return;
-                }
-
-                // 会把下来加载更多加载的历史消息给清理了
-                let lastTimestamp = 0;
-                let msgListLength = conversationState.currentConversationMessageList.length;
-                if (msgListLength > 0) {
-                    lastTimestamp = conversationState.currentConversationMessageList[msgListLength - 1].timestamp;
-                }
-                this._patchMessage(msg, lastTimestamp);
-                conversationState.currentConversationMessageList.push(msg);
-                conversationState.currentConversationOldestMessageId = conversationState.currentConversationMessageList[0].messageId;
-                conversationState.currentConversationOldestMessageUid = conversationState.currentConversationMessageList[0].messageUid;
+                    // 移动端，目前只有单聊会发送typing消息
+                    if (msg.messageContent.type === MessageContentType.Typing) {
+                        let groupId = msg.conversation.type === 1 ? msg.conversation.target : '';
+                        let userInfo = wfc.getUserInfo(msg.from, groupId)
+                        userInfo = Object.assign({}, userInfo);
+                        userInfo._displayName = wfc.getGroupMemberDisplayNameEx(userInfo);
+                        conversationState.inputtingUser = userInfo;
+    
+                        if (!conversationState.inputClearHandler) {
+                            conversationState.inputClearHandler = () => {
+                                conversationState.inputtingUser = null;
+                            }
+                        }
+                        clearTimeout(conversationState.inputClearHandler);
+                        setTimeout(conversationState.inputClearHandler, 3000)
+                    } else {
+                        clearTimeout(conversationState.inputClearHandler);
+                        conversationState.inputtingUser = null;
+                    }
+    
+                    if (!this._isDisplayMessage(msg)) {
+                        return;
+                    }
+                    let msgIndex = conversationState.currentConversationMessageList.findIndex(m => {
+                        return m.messageId === msg.messageId;
+                    });
+                    if (msgIndex > -1) {
+                        console.log('msg duplicate')
+                        return;
+                    }
+    
+                    // 会把下来加载更多加载的历史消息给清理了
+                    let lastTimestamp = 0;
+                    let msgListLength = conversationState.currentConversationMessageList.length;
+                    if (msgListLength > 0) {
+                        lastTimestamp = conversationState.currentConversationMessageList[msgListLength - 1].timestamp;
+                    }
+                    this._patchMessage(msg, lastTimestamp);
+                    conversationState.currentConversationMessageList.push(msg);
+                    conversationState.currentConversationOldestMessageId = conversationState.currentConversationMessageList[0].messageId;
+                    conversationState.currentConversationOldestMessageUid = conversationState.currentConversationMessageList[0].messageUid;
+                }catch(e){}
             }
 
             if (msg.conversation.type !== 2 && miscState.isPageHidden && (miscState.enableNotification || msg.status === MessageStatus.AllMentioned || msg.status === MessageStatus.Mentioned)) {
@@ -605,6 +607,7 @@ let store = {
         conversationState.previewMediaItems.length = 0;
         conversationState.useNewLibImagePreview = useNewLibImagePreview;
         conversationState.previewMediaIndex = null;
+        console.log("conversationState", conversationState)
         if (continuous) {
             let mediaMsgs;
             if(useNewLibImagePreview){

@@ -99,6 +99,7 @@ import QuoteMessageView from "@/ui/main/conversation/message/QuoteMessageView";
 import avenginekitproxy from "@/wfc/av/engine/avenginekitproxy";
 import {fileFromDataUri} from "@/ui/util/imageUtil";
 import StickerMessageContent from "@/wfc/messages/stickerMessageContent";
+import AnimatedDiceContent from "@/wfc/messages/animatedDiceContent";
 import {config as emojiConfig} from "@/ui/main/conversation/EmojiAndStickerConfig";
 import PickUserView from "@/ui/main/pick/PickUserView";
 import {ipcRenderer, isElectron} from "@/platform";
@@ -109,6 +110,7 @@ import IPCRendererEventType from "../../../ipcRendererEventType";
 // vue 不允许在computed里面有副作用
 // 和store.state.conversation.quotedMessage 保持同步
 let lastQuotedMessage = null;
+const s3DiceGifImageName = "animatedDice.gif";
 
 export default {
     name: "MessageInputView",
@@ -333,19 +335,25 @@ export default {
                 this.showEmojiDialog = false;
             }
         },
-
+        randomIntFromInterval(min, max) { // min and max included 
+           return Math.floor(Math.random() * (max - min + 1) + min)
+        },
         onSelectEmoji(emoji) {
             this.showEmojiDialog = false;
-            if (emoji.data.indexOf('http') >= 0) {
-                let sticker = new StickerMessageContent('', emoji.data, 200, 200)
-                wfc.sendConversationMessage(this.conversationInfo.conversation, sticker);
-
-                return;
+            if(emoji.data.includes(s3DiceGifImageName)){
+                const randomNumber = this.randomIntFromInterval(1, 6).toString();
+                let diceContent = new AnimatedDiceContent(randomNumber)
+                wfc.sendConversationMessage(this.conversationInfo.conversation, diceContent);
+            }else{
+                if (emoji.data.indexOf('http') >= 0) {
+                    let sticker = new StickerMessageContent('', emoji.data, 200, 200)
+                    wfc.sendConversationMessage(this.conversationInfo.conversation, sticker);
+                    return;
+                }
+                this.$refs.input.focus();
+                this.insertHTML(emojiParse(emoji.data));
+                this.focusInput();
             }
-
-            this.$refs.input.focus();
-            this.insertHTML(emojiParse(emoji.data));
-            this.focusInput();
         },
 
         createElementFromHTML(htmlString) {
@@ -466,6 +474,7 @@ export default {
             let config = emojiConfig();
             this.emojiCategories = config.emojiCategories;
             this.emojis = config.emojis;
+            console.log("AAAAA", config);
         },
 
         initMention(conversation) {
@@ -674,6 +683,7 @@ export default {
     },
 
     created() {
+        console.log("ABC", this.emojiCategories)
         wfc.eventEmitter.on(EventType.GroupMembersUpdate, this.onGroupMembersUpdate)
     },
 
