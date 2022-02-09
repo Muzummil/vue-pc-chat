@@ -54,6 +54,7 @@ import ConferenceInviteMessageContent from "../av/messages/conferenceInviteMessa
 import ConferenceChangeModeContent from "../av/messages/conferenceChangeModeContent";
 import ConferenceKickoffMemberMessageContent from "../av/messages/conferenceKickoffMemberMessageContent";
 import MarkUnreadMessageContent from "../messages/markUnreadMessageContent";
+import AnimatedDiceContent from '../messages/animatedDiceContent';
 
 export default class MessageConfig {
     static getMessageContentClazz(type) {
@@ -66,7 +67,6 @@ export default class MessageConfig {
                 }
             }
         }
-        console.log(`message type ${type} is unknown`);
         return UnknownMessageContent;
     }
 
@@ -167,6 +167,12 @@ export default class MessageConfig {
             flag: PersistFlag.Persist_And_Count,
             type: MessageContentType.Sticker,
             contentClazz: StickerMessageContent,
+        },
+        {
+            name: 'dice',
+            flag: PersistFlag.Persist_And_Count,
+            type: MessageContentType.MESSAGE_CONTENT_TYPE_DICE_ROTATE,
+            contentClazz: AnimatedDiceContent,
         },
         {
             name: 'link',

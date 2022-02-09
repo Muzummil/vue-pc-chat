@@ -40,6 +40,8 @@
                             <!--                           v-bind:class="{leftarrow:message.direction === 1, rightarrow: message.direction === 0}"/>-->
                             <StickerMessageContentView :message="message"
                                                        v-else-if="message.messageContent.type === 7"/>
+                            <DiceMessageContentView :message="message"
+                                                       v-else-if="message.messageContent.type === 13"/>
                             <CompositeMessageContentView :message="message"
                                                          v-else-if="message.messageContent.type === 11"/>
                             <!--                            <CallStartMessageContentView :message="message"-->
@@ -69,6 +71,7 @@ import ImageMessageContentView from "./conversation/message/content/ImageMessage
 import VideoMessageContentView from "./conversation/message/content/VideoMessageContentView";
 import FileMessageContentView from "./conversation/message/content/FileMessageContentView";
 import StickerMessageContentView from "./conversation/message/content/StickerMessageContentView";
+import DiceMessageContentView from "./conversation/message/content/DiceMessageContentView";
 import UnknowntMessageContentView from "./conversation/message/content/UnknownMessageContentView";
 import Message from "../../wfc/messages/message";
 import {stringValue} from "../../wfc/util/longUtil";
@@ -119,6 +122,7 @@ export default {
         VideoMessageContentView,
         FileMessageContentView,
         StickerMessageContentView,
+        DiceMessageContentView
     }
 }
 </script>
