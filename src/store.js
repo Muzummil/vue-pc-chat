@@ -29,6 +29,9 @@ import IPCEventType from "./ipc/ipcEventType";
 import localStorageEmitter from "./ipc/localStorageEmitter";
 import {stringValue} from "./wfc/util/longUtil";
 import {getConversationPortrait} from "./ui/util/imageUtil";
+import QuitGroupNotification from "./wfc/messages/notification/quitGroupNotification";
+import KickoffGroupMemberNotification from "./wfc/messages/notification/kickoffGroupMemberNotification";
+import DismissGroupNotification from "./wfc/messages/notification/dismissGroupNotification";
 
 /**
  * 一些说明
