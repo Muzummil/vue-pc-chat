@@ -85,7 +85,7 @@ export default {
         },
         updateFriendName() {
             if (this.displayName) {
-                wfc.modifyMyInfo(0, this.displayName,
+                wfc.setFriendAlias(this.userInfo.uid, this.displayName,
                     () => {
                         this.userInfo.displayName = this.displayName;
                     },
