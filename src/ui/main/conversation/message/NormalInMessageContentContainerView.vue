@@ -78,7 +78,6 @@ export default {
             wfc.getUserInfo(userId, true);
         },
         closeUserCard() {
-            console.log('closeUserCard')
             this.$refs["userCardTippy"]._tippy.hide();
         },
         openMessageContextMenu(event, message) {
@@ -110,6 +109,9 @@ export default {
         QuoteMessageView,
         LoadingView
     },
+    updated(){
+        this.closeUserCard();
+    }
 }
 </script>
 

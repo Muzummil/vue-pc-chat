@@ -14,7 +14,7 @@
                 <li>
                     <label>{{ $t('common.alias') }}</label>
                     <div class="alias">
-                        <input type="text" v-model="user.friendAlias" placeholder="备注名" @keyup.enter="updateFriendAlias"/>
+                        <input type="text" v-model="user.friendAlias" placeholder="备注" @keyup.enter="updateFriendAlias"/>
                     </div>
                 </li>
                 <li>
