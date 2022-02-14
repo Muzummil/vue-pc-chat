@@ -14,8 +14,8 @@
                 <li>
                     <label>{{ $t('common.alias') }}</label>
                     <div class="alias">
-                        <input type="text" :value="sharedStateContact.currentFriendRequest._target.alias"
-                               placeholder="备注名"/>
+                        <input type="text" v-model="friendAlias"
+                            @keyup.enter="updateFriendName" :placeholder="$t('common.alias')"/>
                     </div>
                 </li>
                 <li>
@@ -51,6 +51,7 @@ export default {
     data() {
         return {
             sharedStateContact: store.state.contact,
+            friendAlias: store.state.contact.currentFriendRequest._target.alias
         }
     },
 
@@ -66,7 +67,19 @@ export default {
             }, (error) => {
                 console.log(error)
             });
-        }
+        },
+        updateFriendName() {
+            if (this.friendAlias) {
+                const friend = this.sharedStateContact.currentFriendRequest._target;
+                wfc.setFriendAlias(friend.uid, this.friendAlias,
+                    () => {
+                        this.friendAliasName(this.friendAlias);
+                    },
+                    (error) => {
+                        console.log("Failure");
+                    })
+            }
+        },
     },
     computed: {
         name: function () {
