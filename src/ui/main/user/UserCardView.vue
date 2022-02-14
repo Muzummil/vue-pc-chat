@@ -15,9 +15,9 @@
                     <label>{{ $t('common.name') }}</label>
                     <div class="alias">
                         <input @click.stop="" type="text"
-                               v-model="displayName"
+                               v-model="friendAlias"
                                @keyup.enter="updateFriendName"
-                               :placeholder="$t('common.name')"/>
+                               :placeholder="$t('common.alias')"/>
                     </div>
                 </li>
                 <!-- <li>
@@ -55,7 +55,7 @@ export default {
     },
     data() {
         return {
-            friendAlias: this.userInfo.friendAlias,
+            friendAlias: this.userInfo.friendAlias || this.userInfo.displayName,
             displayName: this.userInfo.displayName
         }
     },
@@ -84,10 +84,10 @@ export default {
                 }, {})
         },
         updateFriendName() {
-            if (this.displayName) {
-                wfc.setFriendAlias(this.userInfo.uid, this.displayName,
+            if (this.friendAlias) {
+                wfc.setFriendAlias(this.userInfo.uid, this.friendAlias,
                     () => {
-                        this.userInfo.displayName = this.displayName;
+                        this.userInfo.friendAlias = this.friendAlias;
                     },
                     (error) => {
                         console.log("Failure");
