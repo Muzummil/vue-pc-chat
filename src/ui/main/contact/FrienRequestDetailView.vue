@@ -69,7 +69,7 @@ export default {
             });
         },
         updateFriendName() {
-            if (this.friendAlias) {
+            // if (this.friendAlias) {
                 const friend = this.sharedStateContact.currentFriendRequest._target;
                 wfc.setFriendAlias(friend.uid, this.friendAlias,
                     () => {
@@ -78,7 +78,7 @@ export default {
                     (error) => {
                         console.log("Failure");
                     })
-            }
+            // }
         },
     },
     computed: {

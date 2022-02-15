@@ -18,7 +18,7 @@
                         arrow
                     >
                         <UserCardView v-if="sharedContactState.selfUserInfo" v-on:close="closeUserCard"
-                                      :user-info="sharedContactState.selfUserInfo"/>
+                                      :user-info="sharedContactState.selfUserInfo" :isOwnNameChange="true" />
                     </tippy>
 
                     <a href="#"><img

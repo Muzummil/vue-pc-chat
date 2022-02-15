@@ -12,11 +12,16 @@
         <div class="content">
             <ul>
                 <li v-if="isFriend">
-                    <label>{{ $t('common.alias') }}</label>
+                    <label>{{ isOwnNameChange ?  $t('common.name') : $t('common.alias') }}</label>
                     <div class="alias">
-                        <input :id="userInfo.friendAlias" @click.stop="" type="text"
+                        <input v-if="isOwnNameChange" :id="userInfo.displayName" @click.stop="" type="text"
+                               v-model="userInfo.displayName"
+                               @keyup.enter="updateDisplayName"
+                               :placeholder="$t('common.name')"/>
+
+                        <input v-else :id="userInfo.friendAlias" @click.stop="" type="text"
                                v-model="userInfo.friendAlias"
-                               @keyup.enter="updateFriendName"
+                               @keyup.enter="updateFriendAlias"
                                :placeholder="$t('common.alias')"/>
                     </div>
                 </li>
@@ -52,6 +57,11 @@ export default {
             type: Object,
             required: true,
         },
+        isOwnNameChange: {
+            type: Boolean,
+            required: false,
+            default: false
+        }
     },
     data() {
         return {
@@ -82,20 +92,20 @@ export default {
                     clickToClose: false,
                 }, {})
         },
-        updateFriendName() {
-            if (this.userInfo.friendAlias) {
-                wfc.setFriendAlias(this.userInfo.uid, this.userInfo.friendAlias,
+        updateDisplayName() {
+            // if (this.userInfo.friendAlias) {
+                wfc.modifyMyInfo(0, this.userInfo.displayName,
                     () => {
                         // this.userInfo.friendAlias = this.friendAlias;
                     },
                     (error) => {
                         console.log("Failure");
                     })
-            }
+            // }
         },
         updateFriendAlias() {
             // if (this.friendAlias !== this.userInfo.friendAlias) {
-                wfc.setFriendAlias(this.userInfo.uid, this.friendAlias,
+                wfc.setFriendAlias(this.userInfo.uid, this.userInfo.friendAlias,
                     () => {
                         // do nothing
                     },
