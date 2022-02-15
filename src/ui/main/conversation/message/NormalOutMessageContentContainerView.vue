@@ -37,7 +37,7 @@
                         animation="fade"
                         trigger="click"
                     >
-                        <UserCardView v-on:close="closeUserCard" :user-info="message._from"/>
+                        <UserCardView v-on:close="closeUserCard" :user-info="message._from" :isOwnNameChange="true" />
                     </tippy>
 
                     <img ref="userCardTippy"
