@@ -4,7 +4,7 @@
              v-bind:class="{checked:sharedPickState.messages.indexOf(message) >= 0}">
             <p v-if="this.message._showTime" class="time">{{ message._timeStr }}</p>
             <div class="message-avatar-content-container">
-                <tippy
+                <tippy v-if="!manuallyHideTippy"
                     :to="'infoTrigger' + this.message.messageId"
                     interactive
                     :animate-fill="false"
@@ -71,6 +71,7 @@ export default {
             sharedConversationState: store.state.conversation,
             sharedPickState: store.state.pick,
             highLight: false,
+            manuallyHideTippy: false
         }
     },
     methods: {
@@ -78,7 +79,15 @@ export default {
             wfc.getUserInfo(userId, true);
         },
         closeUserCard() {
-            this.$refs["userCardTippy"]._tippy.hide();
+            // console.log("TIPP", this.$refs["userCardTippy"]._tippy)
+            try{
+                if(!this.$refs["userCardTippy"]._tippy){
+                    this.manuallyHideTippy = true;
+                }else{
+                    this.manuallyHideTippy = false;
+                }
+                this.$refs["userCardTippy"]._tippy.hide();
+            }catch(e){}
         },
         openMessageContextMenu(event, message) {
             this.$parent.$emit('openMessageContextMenu', event, message)

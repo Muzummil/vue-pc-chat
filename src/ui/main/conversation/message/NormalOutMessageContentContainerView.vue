@@ -13,19 +13,29 @@
                     <!--          <button>progress...</button>-->
                     <LoadingView v-if="message.status === 0 || isDownloading"/>
                     <i v-if="message.status === 2" class="icon-ion-close-circled" style="color: red" @click="resend"/>
-                    <div class="flex-column flex-align-end">
-                        <MessageContentContainerView :message="message"
-                                                     class="message-content-container-view"
-                                                     v-bind:class="{highlight:highLight}"
-                                                     @contextmenu.prevent.native="openMessageContextMenu($event, message)"/>
-                        <QuoteMessageView v-if="quotedMessage"
-                                          style="padding: 5px 0; max-width: 80%"
-                                          :message="message"
-                                          :quoted-message="quotedMessage"
-                                          :enable-message-preview="true"
-                                          :message-digest="this.message.messageContent.quoteInfo.messageDigest"
-                                          :show-close-button="false"/>
+
+                    <div class="flex-row flex-align-end gap-2">
+                        <div>
+                            <p v-if="shouldShowMessageReceipt && message.status > 0" class="status-tick-container">
+                                <img class="tick-icon" :src="messageStatusTickImgUrl" >
+                            </p>
+                        </div>
+                        <div class="flex-column flex-align-end">
+                            <MessageContentContainerView :message="message"
+                                                        class="message-content-container-view"
+                                                        v-bind:class="{highlight:highLight}"
+                                                        @contextmenu.prevent.native="openMessageContextMenu($event, message)"/>
+                            <QuoteMessageView v-if="quotedMessage"
+                                            style="padding: 5px 0; max-width: 80%"
+                                            :message="message"
+                                            :quoted-message="quotedMessage"
+                                            :enable-message-preview="true"
+                                            :message-digest="this.message.messageContent.quoteInfo.messageDigest"
+                                            :show-close-button="false"/>
+                        </div>
                     </div>
+
+                    
 
                     <tippy
                         :to="'infoTrigger' + this.message.messageId"
@@ -48,8 +58,7 @@
                          :src="message._from.portrait">
                 </div>
             </div>
-            <p v-if="shouldShowMessageReceipt" class="receipt" @click="showMessageReceiptDetail">
-                {{ messageReceipt }}</p>
+            
         </div>
     </section>
 
@@ -67,6 +76,12 @@ import {gte} from "@/wfc/util/longUtil";
 import MessageReceiptDetailView from "@/ui/main/conversation/message/MessageReceiptDetailView";
 import QuoteMessageView from "@/ui/main/conversation/message/QuoteMessageView";
 import Config from "@/config";
+const sentTickImgUrl = "https://chat-admin-pannel.s3.ap-south-1.amazonaws.com/sent-tick.svg";
+const deliveredTickImgUrl = "https://chat-admin-pannel.s3.ap-south-1.amazonaws.com/delievered-tick.svg";
+const readTickImgUrl = "https://chat-admin-pannel.s3.ap-south-1.amazonaws.com/read-tick.svg";
+const sentMessageStatusId = 1;
+const deliveredMessageStatusId = 2;
+const readMessageStatusId = 3;
 
 export default {
     name: "NormalOutMessageContentView",
@@ -81,6 +96,7 @@ export default {
             sharedConversationState: store.state.conversation,
             sharedPickState: store.state.pick,
             highLight: false,
+            messageTickStatusImgUrl: null
         }
     },
     components: {
@@ -161,16 +177,13 @@ export default {
                 }
             }
         },
-    },
-
-    computed: {
-        messageReceipt() {
+        getMsgDeliveryStatusId(){
             let conversation = this.message.conversation;
             let timestamp = this.message.timestamp;
-            let receiptDesc = ''
+            // let receiptDesc = ''
+            let msgDeliveryStatus = sentMessageStatusId;
             let deliveries = this.sharedConversationState.currentConversationDeliveries;
             let readEntries = this.sharedConversationState.currentConversationRead;
-
             if (conversation.type === ConversationType.Single) {
                 let readDt = readEntries ? readEntries.get(conversation.target) : 0
                 readDt = readDt ? readDt : 0;
@@ -178,18 +191,21 @@ export default {
                 recvDt = recvDt ? recvDt : 0;
 
                 if (gte(readDt, timestamp)) {
-                    receiptDesc = "已读";
+                    msgDeliveryStatus = readMessageStatusId;
+                    // receiptDesc = "已读";
                 } else if (gte(recvDt, timestamp)) {
-                    receiptDesc = "已送达";
+                    msgDeliveryStatus = deliveredMessageStatusId;
+                    // receiptDesc = "已送达";
                 } else {
-                    receiptDesc = "未送达";
+                    msgDeliveryStatus = sentMessageStatusId;
+                    // receiptDesc = "未送达";
                 }
             } else {
                 let groupMembers = wfc.getGroupMemberIds(conversation.target, false);
                 if (!groupMembers || groupMembers.length === 0) {
-                    receiptDesc = '';
+                    // receiptDesc = '';
                 } else {
-                    let memberCount = groupMembers.length;
+                    // let memberCount = groupMembers.length;
                     let recvCount = 0;
                     let readCount = 0;
 
@@ -210,10 +226,44 @@ export default {
                             unReceiveUserIds.push(memberId)
                         }
                     });
-                    receiptDesc = `已送达 ${recvCount}/${memberCount}，已读 ${readCount}/${memberCount}`
+                    if(readCount > 0){
+                        msgDeliveryStatus = readMessageStatusId;
+                    } else if(recvCount > 0){
+                        msgDeliveryStatus = deliveredMessageStatusId;
+                    } else{
+                        msgDeliveryStatus = sentMessageStatusId;
+                    }
+                    // receiptDesc = `已送达 ${recvCount}/${memberCount}，已读 ${readCount}/${memberCount}`
                 }
             }
-            return receiptDesc;
+
+            return msgDeliveryStatus;
+        }
+    },
+
+    computed: {
+        messageStatusTickImgUrl:{
+            get(){
+                let tickImgUrl = sentTickImgUrl;
+                let statusId = this.getMsgDeliveryStatusId();
+                switch (statusId) {
+                    case 1:
+                        tickImgUrl = sentTickImgUrl;
+                        break;
+                    case 2:
+                        tickImgUrl = deliveredTickImgUrl;
+                        break;
+                    case 3:
+                        tickImgUrl = readTickImgUrl;
+                        break;
+                
+                    default:
+                        tickImgUrl = sentTickImgUrl;
+                        break;
+                }
+                
+                return tickImgUrl;
+            }
         },
 
         quotedMessage() {
@@ -234,7 +284,8 @@ export default {
         },
 
         shouldShowMessageReceipt() {
-            return this.sharedConversationState.isMessageReceiptEnable && ["FireRobot", Config.FILE_HELPER_ID].indexOf(this.message.conversation.target) < 0;
+            return ["FireRobot", Config.FILE_HELPER_ID].indexOf(this.message.conversation.target) < 0;
+            // return this.sharedConversationState.isMessageReceiptEnable && ["FireRobot", Config.FILE_HELPER_ID].indexOf(this.message.conversation.target) < 0;
         }
     },
 
@@ -261,12 +312,6 @@ export default {
     color: #b4b4b4;
     font-size: 10px;
     background-color: #f3f3f3;
-}
-
-.message-time-container .receipt {
-    margin-right: 70px;
-    font-size: 12px;
-    color: #b4b4b4;
 }
 
 .message-content-container {
@@ -300,5 +345,11 @@ export default {
     opacity: 0.5;
     --out-arrow-color: #dadada !important;
 }
-
+.tick-icon{
+    width: 17px;
+}
+.status-tick-container{
+    margin-right: -5px;
+    margin-bottom: -6px;
+}
 </style>
