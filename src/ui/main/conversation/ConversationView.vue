@@ -21,6 +21,29 @@
                  @drop="dragEvent($event, 'drop')"
                  :dummy_just_for_reactive="currentVoiceMessage"
             >
+                <!-- Start Pin/Unpin Message -->
+                <div v-if="pinnedMessage" class="pin-messages-container">
+                    <div class="flex-row justify-content-between flex-align-center">
+                        <div class="text-section flex-row relative flex-align-center">
+                            <div class="pin-line"></div>
+                            <div class="pinned-message-content">
+                                <div class="flex-column">
+                                    <div class="pin-label">Pinned Message</div>
+                                    <div class="pin-message">{{pinnedMessage.content.searchableContent}}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="close-pinned">
+                            <div class="cross">
+                                X
+                                <!-- <span class="icon-ion-close-circled"></span> -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- End Pin/Unpin Message -->
+
                 <div v-show="dragAndDropEnterCount > 0" class="drag-drop-container">
                     <div class="drag-drop">
                         <p>{{ $t('conversation.drag_to_send_to', [conversationTitle]) }}</p>
@@ -84,6 +107,9 @@
 
                 <vue-context ref="menu" v-slot="{data:message}" :close-on-scroll="true" v-on:close="onMenuClose">
                     <!--          更多menu item-->
+                    <li v-if="isPinable(message)">
+                        <a @click.prevent="pinUnpin(message)">{{ $t('common.pin_msg') }}</a>
+                    </li>
                     <li v-if="isCopyable(message)">
                         <a @click.prevent="copy(message)">{{ $t('common.copy') }}</a>
                     </li>
@@ -358,6 +384,9 @@ export default {
         isCopyable(message) {
             return message && (message.messageContent instanceof TextMessageContent || message.messageContent instanceof ImageMessageContent);
         },
+        isPinable(message) {
+            return message && (message.messageContent instanceof TextMessageContent);
+        },
         isDownloadAble(message) {
             return message && (message.messageContent instanceof ImageMessageContent
                 || message.messageContent instanceof FileMessageContent
@@ -433,6 +462,21 @@ export default {
                 }
             } else {
                 copyImg(content.remotePath)
+            }
+        },
+        pinUnpin(message){
+            console.log("MSG", message);
+            // let msg = wfc.getMessageById(messageId);
+            let msgExtra = {
+                "isPinned": true,
+                "isUpdated": true
+            }
+            if (message) {
+                message.content.extra = msgExtra;
+                console.log("MSG22", message);
+                wfc.pinUnpinMessage(message.messageId, true,  message.messageContent, true, true);
+                console.log("AVVV", this.conversationInfo.conversation)
+                // wfc.updateMessageContent(message.messageId,  message.messageContent);
             }
         },
         download(message) {
@@ -708,6 +752,7 @@ export default {
         }
         this.conversationInfo = this.sharedConversationState.currentConversationInfo;
         // this.sharedConversationState.forceScrollToBottom = false;
+        console.log("conversationInfo", this.conversationInfo)
     },    
 
     computed: {
@@ -732,6 +777,12 @@ export default {
         },
         checkShowScrollBtnComp(){
             return this.showScrollButton;
+        },
+        pinnedMessage(){
+            console.log("DDD", this.sharedConversationState.currentConversationMessageList)
+            let pinnedMessages = this.sharedConversationState.currentConversationMessageList.filter(message=> message.content.extra.isPinned);
+            console.log("pinnedMessages",pinnedMessages)
+            return pinnedMessages[0];
         }
     },
 
@@ -919,5 +970,55 @@ export default {
 .scroll-bottom-btn img:active{
     border: 2px solid #5f77bd;
     border-radius: 50%;
+}
+.pin-messages-container{
+    position: absolute;
+    padding: 7px 20px;
+    /* background: #F3BE5B; */
+    width: 100%;
+    z-index: 100;
+    background: whitesmoke;
+    border-top: 1px solid #cbc4c4;
+    border-bottom: 1px solid #cbc4c4;
+}
+.pin-messages-container .pin-line{
+    height: 100%;
+    border-right: 2px solid #5f77bd;
+    position: absolute;
+    left: 0;
+}
+.pin-messages-container{
+    width: 100%;
+    text-overflow: ellipsis;
+}
+.pinned-message-content{
+    margin-left: 12px;
+}
+.justify-content-between{
+    justify-content: space-between;
+}
+.pin-label{
+    font-size: 13px;
+    font-weight: bold;
+    color: #5f77bd;
+}
+.pin-message{
+    font-size: 12px;
+    color: black;
+}
+.close-pinned{
+    border: 1px solid #5f77bd;
+    border-radius: 50%;
+    /* padding: 5px; */
+    width: 20px;
+    height: 20px;
+    /* align-items: center; */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+.cross{
+    color: #5f77bd;
 }
 </style>

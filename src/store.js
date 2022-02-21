@@ -293,6 +293,23 @@ let store = {
             }
         });
 
+        wfc.eventEmitter.on(EventType.PinMessage, (messageId) => {
+            this._loadDefaultConversationList();
+            if (conversationState.currentConversationInfo) {
+                if (conversationState.currentConversationMessageList) {
+                    conversationState.currentConversationMessageList.pinnedMessages = conversationState.currentConversationMessageList.filter(msg => msg.messageId === messageId)
+                }
+            }
+        });
+        wfc.eventEmitter.on(EventType.unpinMessage, (messageId) => {
+            this._loadDefaultConversationList();
+            if (conversationState.currentConversationInfo) {
+                if (conversationState.currentConversationMessageList) {
+                    conversationState.currentConversationMessageList.pinnedMessages = [];
+                }
+            }
+        });
+
 
         wfc.eventEmitter.on(EventType.SendMessage, (message) => {
             this._loadDefaultConversationList();

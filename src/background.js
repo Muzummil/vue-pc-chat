@@ -436,7 +436,6 @@ function updateTray(unread = 0) {
 
 function createMenu() {
     var menu = Menu.buildFromTemplate(mainMenu);
-
     if (isOsx) {
         Menu.setApplicationMenu(menu);
     } else {
