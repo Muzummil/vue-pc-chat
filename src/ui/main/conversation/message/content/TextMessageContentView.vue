@@ -54,6 +54,8 @@ export default {
             tmp = tmp.replace(/^[ \t]+/gm, function (x) {
                 return new Array(x.length + 1).join('&nbsp;')
             })
+            tmp = tmp.replace(/<script/gi, "&lt;script");
+            tmp = tmp.replace(/<iframe/gi, "&lt;iframe");
             if (tmp.indexOf('<img') >= 0) {
                 tmp = tmp.replace(/<img/g, '<img style="max-width:800px;"')
                 return tmp;

@@ -88,6 +88,7 @@
                      class="divider-handler"></div>
                 <MessageInputView :conversationInfo="sharedConversationState.currentConversationInfo"
                                   v-show="!sharedConversationState.enableMessageMultiSelection"
+                                  ref="messageInputView"
                                   class="message-input-container"/>
                 <MultiSelectActionView v-show="sharedConversationState.enableMessageMultiSelection"/>
                 <SingleConversationInfoView
@@ -141,6 +142,12 @@
                         <a @click.prevent="openDir(message)">{{ $t('common.open_dir') }}</a>
                     </li>
                 </vue-context>
+                <vue-context ref="messageSenderContextMenu" v-slot="{data: message}" :close-on-scroll="true" v-on:close="onMessageSenderContextMenuClose">
+                    <!--          更多menu item，比如添加到通讯录等-->
+                    <li>
+                        <a @click.prevent="mentionMessageSender(message)">{{ mentionMessageSenderTitle(message) }}</a>
+                    </li>
+                </vue-context>
             </div>
         </div>
     </section>
@@ -161,10 +168,8 @@ import wfc from "@/wfc/client/wfc";
 import {numberValue} from "@/wfc/util/longUtil";
 import InfiniteLoading from 'vue-infinite-loading';
 import MultiSelectActionView from "@/ui/main/conversation/MessageMultiSelectActionView";
-import ForwardMessageByPickConversationView
-    from "@/ui/main/conversation/message/forward/ForwardMessageByPickConversationView";
-import ForwardMessageByCreateConversationView
-    from "@/ui/main/conversation/message/forward/ForwardMessageByCreateConversationView";
+import ForwardMessageByPickConversationView from "@/ui/main/conversation/message/forward/ForwardMessageByPickConversationView";
+import ForwardMessageByCreateConversationView from "@/ui/main/conversation/message/forward/ForwardMessageByCreateConversationView";
 import ScaleLoader from 'vue-spinner/src/ScaleLoader'
 import ForwardType from "@/ui/main/conversation/message/forward/ForwardType";
 import {fs, isElectron, shell} from "@/platform";
@@ -341,6 +346,7 @@ export default {
                 // store.setShouldAutoScrollToBottom(false)
             } else {
                 store.setShouldAutoScrollToBottom(true)
+                store.clearConversationUnreadStatus(this.sharedConversationState.currentConversationInfo.conversation);
             }
         },
 
@@ -378,6 +384,9 @@ export default {
 
         onMenuClose() {
             this.$emit('contextMenuClosed')
+        },
+        onMessageSenderContextMenuClose() {
+            console.log('onMessageSenderContextMenuClose')
         },
 
         // message context menu
@@ -523,6 +532,26 @@ export default {
 
         quoteMessage(message) {
             store.quoteMessage(message);
+        },
+
+        // call from child
+        favMessages(messages) {
+            console.log('fav messages');
+            let compositeMessageContent = new CompositeMessageContent();
+            let title = '';
+            let msgConversation = messages[0].conversation;
+            if (msgConversation.type === ConversationType.Single) {
+                let users = store.getUserInfos([wfc.getUserId(), msgConversation.target], '');
+                title = users[0]._displayName + '和' + users[1]._displayName + '的聊天记录';
+            } else {
+                title = '群的聊天记录';
+            }
+            compositeMessageContent.title = title;
+            compositeMessageContent.messages = messages;
+
+            let message = new Message(msgConversation, compositeMessageContent);
+            message.from = wfc.getUserId();
+            this.favMessage(message);
         },
 
         favMessage(message) {
@@ -675,6 +704,17 @@ export default {
                     messageListElement.scrollTop = messageListElement.scrollHeight + 100000;
                 }, 10);
             }
+        },
+        mentionMessageSenderTitle(message) {
+            if (!message){
+                return ''
+            }
+            let displayName = wfc.getGroupMemberDisplayName(message.conversation.target, message.from);
+            return '@' + displayName;
+        },
+
+        mentionMessageSender(message) {
+            this.$refs.messageInputView.mention(message.conversation.target, message.from);
         }
     },
 
@@ -683,8 +723,15 @@ export default {
         document.addEventListener('mouseup', this.dragEnd);
         document.addEventListener('mousemove', this.drag);
 
-        this.$on('openMessageContextMenu', function (event, message) {
+        this.$on('openMessageContextMenu', (event, message) => {
             this.$refs.menu.open(event, message);
+        });
+
+        this.$on('openMessageSenderContextMenu', (event, message) => {
+            // 目前只支持群会话里面，消息发送者右键@
+            if (message.conversation.type === ConversationType.Group) {
+                this.$refs.messageSenderContextMenu.open(event, message);
+            }
         });
 
         this.$eventBus.$on('send-file', args => {
@@ -733,6 +780,11 @@ export default {
         console.log("BEFORE UPDATE", this.sharedConversationState.forceScrollToBottom)
         if(this.sharedConversationState.forceScrollToBottom){
             this.scrollToBottom();
+        }
+    },
+    updated() {
+        if (!this.sharedConversationState.currentConversationInfo) {
+            return;
         }
     },
     updated() {
