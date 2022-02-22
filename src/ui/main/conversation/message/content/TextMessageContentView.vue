@@ -32,6 +32,7 @@ export default {
 
         },
         preventContextMenuTextSelection(event) {
+            console.log(this.textSelected, event)
             if (!this.textSelected) {
                 if (window.getSelection) {
                     if (window.getSelection().empty) {  // Chrome
@@ -53,10 +54,13 @@ export default {
             tmp = tmp.replace(/^[ \t]+/gm, function (x) {
                 return new Array(x.length + 1).join('&nbsp;')
             })
+            tmp = tmp.replace(/<script/gi, "&lt;script");
+            tmp = tmp.replace(/<iframe/gi, "&lt;iframe");
             if (tmp.indexOf('<img') >= 0) {
                 tmp = tmp.replace(/<img/g, '<img style="max-width:800px;"')
                 return tmp;
             }
+            console.log("TMP", tmp)
             return tmp;
         }
     }

@@ -21,6 +21,29 @@
                  @drop="dragEvent($event, 'drop')"
                  :dummy_just_for_reactive="currentVoiceMessage"
             >
+                <!-- Start Pin/Unpin Message -->
+                <div v-if="pinnedMessage" class="pin-messages-container">
+                    <div class="flex-row justify-content-between flex-align-center">
+                        <div class="text-section flex-row relative flex-align-center">
+                            <div class="pin-line"></div>
+                            <div class="pinned-message-content">
+                                <div class="flex-column">
+                                    <div class="pin-label">Pinned Message</div>
+                                    <div class="pin-message">{{pinnedMessage.content.searchableContent}}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="close-pinned">
+                            <div class="cross">
+                                X
+                                <!-- <span class="icon-ion-close-circled"></span> -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- End Pin/Unpin Message -->
+
                 <div v-show="dragAndDropEnterCount > 0" class="drag-drop-container">
                     <div class="drag-drop">
                         <p>{{ $t('conversation.drag_to_send_to', [conversationTitle]) }}</p>
@@ -65,6 +88,7 @@
                      class="divider-handler"></div>
                 <MessageInputView :conversationInfo="sharedConversationState.currentConversationInfo"
                                   v-show="!sharedConversationState.enableMessageMultiSelection"
+                                  ref="messageInputView"
                                   class="message-input-container"/>
                 <MultiSelectActionView v-show="sharedConversationState.enableMessageMultiSelection"/>
                 <SingleConversationInfoView
@@ -84,6 +108,9 @@
 
                 <vue-context ref="menu" v-slot="{data:message}" :close-on-scroll="true" v-on:close="onMenuClose">
                     <!--          更多menu item-->
+                    <li v-if="isPinable(message)">
+                        <a @click.prevent="pinUnpin(message)">{{ $t('common.pin_msg') }}</a>
+                    </li>
                     <li v-if="isCopyable(message)">
                         <a @click.prevent="copy(message)">{{ $t('common.copy') }}</a>
                     </li>
@@ -115,6 +142,12 @@
                         <a @click.prevent="openDir(message)">{{ $t('common.open_dir') }}</a>
                     </li>
                 </vue-context>
+                <vue-context ref="messageSenderContextMenu" v-slot="{data: message}" :close-on-scroll="true" v-on:close="onMessageSenderContextMenuClose">
+                    <!--          更多menu item，比如添加到通讯录等-->
+                    <li>
+                        <a @click.prevent="mentionMessageSender(message)">{{ mentionMessageSenderTitle(message) }}</a>
+                    </li>
+                </vue-context>
             </div>
         </div>
     </section>
@@ -135,10 +168,8 @@ import wfc from "@/wfc/client/wfc";
 import {numberValue} from "@/wfc/util/longUtil";
 import InfiniteLoading from 'vue-infinite-loading';
 import MultiSelectActionView from "@/ui/main/conversation/MessageMultiSelectActionView";
-import ForwardMessageByPickConversationView
-    from "@/ui/main/conversation/message/forward/ForwardMessageByPickConversationView";
-import ForwardMessageByCreateConversationView
-    from "@/ui/main/conversation/message/forward/ForwardMessageByCreateConversationView";
+import ForwardMessageByPickConversationView from "@/ui/main/conversation/message/forward/ForwardMessageByPickConversationView";
+import ForwardMessageByCreateConversationView from "@/ui/main/conversation/message/forward/ForwardMessageByCreateConversationView";
 import ScaleLoader from 'vue-spinner/src/ScaleLoader'
 import ForwardType from "@/ui/main/conversation/message/forward/ForwardType";
 import {fs, isElectron, shell} from "@/platform";
@@ -315,6 +346,7 @@ export default {
                 // store.setShouldAutoScrollToBottom(false)
             } else {
                 store.setShouldAutoScrollToBottom(true)
+                store.clearConversationUnreadStatus(this.sharedConversationState.currentConversationInfo.conversation);
             }
         },
 
@@ -353,10 +385,16 @@ export default {
         onMenuClose() {
             this.$emit('contextMenuClosed')
         },
+        onMessageSenderContextMenuClose() {
+            console.log('onMessageSenderContextMenuClose')
+        },
 
         // message context menu
         isCopyable(message) {
             return message && (message.messageContent instanceof TextMessageContent || message.messageContent instanceof ImageMessageContent);
+        },
+        isPinable(message) {
+            return message && (message.messageContent instanceof TextMessageContent);
         },
         isDownloadAble(message) {
             return message && (message.messageContent instanceof ImageMessageContent
@@ -435,6 +473,21 @@ export default {
                 copyImg(content.remotePath)
             }
         },
+        pinUnpin(message){
+            console.log("MSG", message);
+            // let msg = wfc.getMessageById(messageId);
+            let msgExtra = {
+                "isPinned": true,
+                "isUpdated": true
+            }
+            if (message) {
+                message.content.extra = msgExtra;
+                console.log("MSG22", message);
+                wfc.pinUnpinMessage(message.messageId, true,  message.messageContent, true, true);
+                console.log("AVVV", this.conversationInfo.conversation)
+                // wfc.updateMessageContent(message.messageId,  message.messageContent);
+            }
+        },
         download(message) {
             if (isElectron()) {
                 downloadFile(message);
@@ -479,6 +532,26 @@ export default {
 
         quoteMessage(message) {
             store.quoteMessage(message);
+        },
+
+        // call from child
+        favMessages(messages) {
+            console.log('fav messages');
+            let compositeMessageContent = new CompositeMessageContent();
+            let title = '';
+            let msgConversation = messages[0].conversation;
+            if (msgConversation.type === ConversationType.Single) {
+                let users = store.getUserInfos([wfc.getUserId(), msgConversation.target], '');
+                title = users[0]._displayName + '和' + users[1]._displayName + '的聊天记录';
+            } else {
+                title = '群的聊天记录';
+            }
+            compositeMessageContent.title = title;
+            compositeMessageContent.messages = messages;
+
+            let message = new Message(msgConversation, compositeMessageContent);
+            message.from = wfc.getUserId();
+            this.favMessage(message);
         },
 
         favMessage(message) {
@@ -631,6 +704,17 @@ export default {
                     messageListElement.scrollTop = messageListElement.scrollHeight + 100000;
                 }, 10);
             }
+        },
+        mentionMessageSenderTitle(message) {
+            if (!message){
+                return ''
+            }
+            let displayName = wfc.getGroupMemberDisplayName(message.conversation.target, message.from);
+            return '@' + displayName;
+        },
+
+        mentionMessageSender(message) {
+            this.$refs.messageInputView.mention(message.conversation.target, message.from);
         }
     },
 
@@ -639,8 +723,15 @@ export default {
         document.addEventListener('mouseup', this.dragEnd);
         document.addEventListener('mousemove', this.drag);
 
-        this.$on('openMessageContextMenu', function (event, message) {
+        this.$on('openMessageContextMenu', (event, message) => {
             this.$refs.menu.open(event, message);
+        });
+
+        this.$on('openMessageSenderContextMenu', (event, message) => {
+            // 目前只支持群会话里面，消息发送者右键@
+            if (message.conversation.type === ConversationType.Group) {
+                this.$refs.messageSenderContextMenu.open(event, message);
+            }
         });
 
         this.$eventBus.$on('send-file', args => {
@@ -692,6 +783,11 @@ export default {
         }
     },
     updated() {
+        if (!this.sharedConversationState.currentConversationInfo) {
+            return;
+        }
+    },
+    updated() {
         this.popupItem = this.$refs['setting'];
         // refer to http://iamdustan.com/smoothscroll/
         if (this.sharedConversationState.currentConversationInfo) {
@@ -708,6 +804,7 @@ export default {
         }
         this.conversationInfo = this.sharedConversationState.currentConversationInfo;
         // this.sharedConversationState.forceScrollToBottom = false;
+        console.log("conversationInfo", this.conversationInfo)
     },    
 
     computed: {
@@ -732,6 +829,12 @@ export default {
         },
         checkShowScrollBtnComp(){
             return this.showScrollButton;
+        },
+        pinnedMessage(){
+            console.log("DDD", this.sharedConversationState.currentConversationMessageList)
+            let pinnedMessages = this.sharedConversationState.currentConversationMessageList.filter(message=> message.content.extra.isPinned);
+            console.log("pinnedMessages",pinnedMessages)
+            return pinnedMessages[0];
         }
     },
 
@@ -919,5 +1022,55 @@ export default {
 .scroll-bottom-btn img:active{
     border: 2px solid #5f77bd;
     border-radius: 50%;
+}
+.pin-messages-container{
+    position: absolute;
+    padding: 7px 20px;
+    /* background: #F3BE5B; */
+    width: 100%;
+    z-index: 100;
+    background: whitesmoke;
+    border-top: 1px solid #cbc4c4;
+    border-bottom: 1px solid #cbc4c4;
+}
+.pin-messages-container .pin-line{
+    height: 100%;
+    border-right: 2px solid #5f77bd;
+    position: absolute;
+    left: 0;
+}
+.pin-messages-container{
+    width: 100%;
+    text-overflow: ellipsis;
+}
+.pinned-message-content{
+    margin-left: 12px;
+}
+.justify-content-between{
+    justify-content: space-between;
+}
+.pin-label{
+    font-size: 13px;
+    font-weight: bold;
+    color: #5f77bd;
+}
+.pin-message{
+    font-size: 12px;
+    color: black;
+}
+.close-pinned{
+    border: 1px solid #5f77bd;
+    border-radius: 50%;
+    /* padding: 5px; */
+    width: 20px;
+    height: 20px;
+    /* align-items: center; */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+.cross{
+    color: #5f77bd;
 }
 </style>

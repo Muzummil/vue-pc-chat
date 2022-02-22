@@ -436,7 +436,6 @@ function updateTray(unread = 0) {
 
 function createMenu() {
     var menu = Menu.buildFromTemplate(mainMenu);
-
     if (isOsx) {
         Menu.setApplicationMenu(menu);
     } else {
@@ -528,8 +527,10 @@ const createMainWindow = async () => {
         webPreferences: {
             scrollBounce: false,
             nodeIntegration: true,
+            contextIsolation: false,
             nativeWindowOpen: true,
             webSecurity: false,
+            devTools: !app.isPackaged,
         },
         frame: !isWin,
         icon
@@ -634,19 +635,43 @@ const createMainWindow = async () => {
     });
 
     ipcMain.on('file-paste', (event) => {
-        var image = clipboard.readImage();
-        var args = {hasImage: false};
+        let args = {hasImage: false};
 
-        if (!image.isEmpty()) {
-            let filename = tmp.tmpNameSync() + '.png';
+        let foundFiles = false;
+        const clipboardEx = require('electron-clipboard-ex')
+        // only support windows and mac
+        if (clipboardEx) {
+            const filePaths = clipboardEx.readFilePaths();
+            if (filePaths && filePaths.length > 0) {
+                args = {
+                    hasFile: true,
+                    files: [],
+                };
+                filePaths.forEach(path => {
+                    args.files.push({
+                        path: path,
+                        name: nodePath.basename(path),
+                        size: fs.statSync(path).size,
+                    })
+                })
+                foundFiles = true;
+            }
+        }
 
-            args = {
-                hasImage: true,
-                filename: filename,
-                raw: image.toPNG(),
-            };
+        if (!foundFiles) {
+            let image = clipboard.readImage();
+            console.log('file-paste', image, image.isEmpty(), image.isTemplateImage(), image.isMacTemplateImage);
+            if (!image.isEmpty()) {
+                let filename = tmp.tmpNameSync() + '.png';
 
-            fs.writeFileSync(filename, image.toPNG());
+                args = {
+                    hasImage: true,
+                    filename: filename,
+                    raw: image.toPNG(),
+                };
+
+                fs.writeFileSync(filename, image.toPNG());
+            }
         }
 
         event.returnValue = args;
@@ -690,13 +715,22 @@ const createMainWindow = async () => {
         let messageUid = args.messageUid;
         let compositeMessageWin = compositeMessageWindows.get(messageUid);
         if (!compositeMessageWin) {
-            let url = args.url + ('?messageUid=' + messageUid)
-            let win = createWindow(url, 700, 850, 700, 850, false, false);
-            compositeMessageWindows.set(messageUid, win)
+            let url;
+            if (messageUid) {
+                url = args.url + ('?messageUid=' + messageUid)
+            } else {
+                url = args.url;
+            }
+            let win = createWindow(url, 960, 600, 640, 400, false, false);
+            if (messageUid) {
+                compositeMessageWindows.set(messageUid, win)
+            }
 
             // win.webContents.openDevTools();
             win.on('close', () => {
-                compositeMessageWindows.delete(messageUid);
+                if (messageUid) {
+                    compositeMessageWindows.delete(messageUid);
+                }
             });
             win.show();
         } else {

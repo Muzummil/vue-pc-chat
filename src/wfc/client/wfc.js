@@ -1431,6 +1431,10 @@ export class WfcManager {
         return impl.deleteMessageById(messageId);
     }
 
+    pinUnpinMessage(msgUid, pinStatus, messageContent, successCB, failCB){
+        impl.pinUnpinMessage(msgUid, pinStatus, messageContent, successCB, failCB);
+    }
+
     /**
      * 删除远程消息
      * @param {Long | string} msgUid 消息uid
