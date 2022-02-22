@@ -527,6 +527,7 @@ const createMainWindow = async () => {
         webPreferences: {
             scrollBounce: false,
             nodeIntegration: true,
+            contextIsolation: false,
             nativeWindowOpen: true,
             webSecurity: false,
             devTools: !app.isPackaged,

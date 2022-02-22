@@ -73,7 +73,7 @@ export default {
                     (error) => {
                         // do nothing
                     })
-            // }
+            }
         },
         changeFriendBlacklist(status){
             wfc.setBlackList(this.user.uid, status, () => {
