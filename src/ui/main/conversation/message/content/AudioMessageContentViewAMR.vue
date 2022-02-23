@@ -1,5 +1,6 @@
 <template>
     <div ref="container" class="audio-message-container" :style="widthStyle" @click="playVoice">
+        DDD
         <!--    <i class="icon-ion-android-volume-up"></i>-->
         <!--    <span> {{ duration }} </span>-->
 
@@ -23,6 +24,7 @@ import Config from "@/config";
 import ScaleLoader from 'vue-spinner/src/ScaleLoader'
 import BenzAMRRecorder from "benz-amr-recorder";
 import store from "../../../../../store";
+import { app } from 'electron';
 
 export default {
     name: "AudioMessageContentView",
@@ -50,9 +52,88 @@ export default {
         }
     },
     methods: {
+        convertSpeechToText(){
+            console.log(this.message.content.remoteMediaUrl)
+            const fs = require('fs');
+            const path = require('path');
+            const sdk = require("microsoft-cognitiveservices-speech-sdk");
+            const speechConfig = sdk.SpeechConfig.fromSubscription("81a0f68c4dcb4c42ac8e6e0717c0f71d", "southeastasia");
+            speechConfig.speechRecognitionLanguage = "zh-CN";
+            const localSaveDirectoryPath = path.join( __dirname.split("node_modules")[0], "audio/" + this.message.content.searchableContent + ".mav");
+            const electron = require('electron');
+            // Importing dialog module using remote
+            // const dialog = electron.remote.dialog;
+            console.log("BG", __dirname.split("node_modules")[0])
+            console.log("FG", localSaveDirectoryPath)
+            fs.writeFile(localSaveDirectoryPath, 
+                        this.message.content.remoteMediaUrl, function (err) {
+                if (err) throw err;
+                console.log('Saved!', localSaveDirectoryPath);
+            });
+
+            // dialog.showSaveDialog({
+            //     title: 'Select the File Path to save',
+            //     defaultPath: path.join(__dirname, '../assets/sample.txt'),
+            //     // defaultPath: path.join(__dirname, '../assets/'),
+            //     buttonLabel: 'Save',
+            //     // Restricting the user to only Text Files.
+            //     filters: [
+            //         {
+            //             name: 'Text Files',
+            //             extensions: ['txt', 'docx']
+            //         }, ],
+            //     properties: []
+            // }).then(file => {
+            //     // Stating whether dialog operation was cancelled or not.
+            //     console.log(file.canceled);
+            //     if (!file.canceled) {
+            //         console.log(file.filePath.toString());
+                    
+            //         // Creating and Writing to the sample.txt file
+            //         fs.writeFile(localSaveDirectoryPath, 
+            //                     'This is a Sample File', function (err) {
+            //             if (err) throw err;
+            //             console.log('Saved!');
+            //         });
+            //     }
+            // }).catch(err => {
+            //     console.log(err)
+            // }); 
+
+            // fs.writeFileSync("C:/Users/97156/Downloads", "hello world", 'utf-8');
+
+            let audioConfig = sdk.AudioConfig.fromWavFileInput(fs.readFileSync("C:/Users/97156/Downloads/chinease.wav"));
+            console.log("audioConfig", audioConfig)
+            let speechRecognizer = new sdk.SpeechRecognizer(speechConfig, audioConfig);
+
+            speechRecognizer.startContinuousRecognitionAsync((result) => {
+                console.log("SPEECH", result)
+                switch (result.reason) {
+                    case sdk.ResultReason.RecognizedSpeech:
+                        console.log(`RECOGNIZED: Text=${result.text}`);
+                        break;
+                    case sdk.ResultReason.NoMatch:
+                        console.log("NOMATCH: Speech could not be recognized.");
+                        break;
+                    case sdk.ResultReason.Canceled:
+                        const cancellation = CancellationDetails.fromResult(result);
+                        console.log(`CANCELED: Reason=${cancellation.reason}`);
+
+                        if (cancellation.reason == sdk.CancellationReason.Error) {
+                            console.log(`CANCELED: ErrorCode=${cancellation.ErrorCode}`);
+                            console.log(`CANCELED: ErrorDetails=${cancellation.errorDetails}`);
+                            console.log("CANCELED: Did you update the key and location/region info?");
+                        }
+                        break;
+                }    
+                speechRecognizer.close();
+            });
+        },
         playVoice() {
-            this.$set(this.message, '_isPlaying', true)
+            console.log("MSG", this.message)
+            this.$set(this.message, '_isPlaying', true);
             store.playVoice(this.message)
+            this.convertSpeechToText();
         },
     },
 
