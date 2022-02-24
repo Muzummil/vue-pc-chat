@@ -22,9 +22,12 @@
 import Message from "@/wfc/messages/message";
 import Config from "@/config";
 import ScaleLoader from 'vue-spinner/src/ScaleLoader'
-import BenzAMRRecorder from "benz-amr-recorder";
 import store from "../../../../../store";
-import { app } from 'electron';
+
+const fs = require('fs');
+const path = require('path');
+const sdk = require("microsoft-cognitiveservices-speech-sdk");
+const speechConfig = sdk.SpeechConfig.fromSubscription("81a0f68c4dcb4c42ac8e6e0717c0f71d", "southeastasia");
 
 export default {
     name: "AudioMessageContentView",
@@ -52,24 +55,29 @@ export default {
         }
     },
     methods: {
+        getFilenameFromUrl(url){
+            return url.substring(url.lastIndexOf('/') + 1);
+        },
         convertSpeechToText(){
             console.log(this.message.content.remoteMediaUrl)
-            const fs = require('fs');
-            const path = require('path');
-            const sdk = require("microsoft-cognitiveservices-speech-sdk");
-            const speechConfig = sdk.SpeechConfig.fromSubscription("81a0f68c4dcb4c42ac8e6e0717c0f71d", "southeastasia");
+            
             speechConfig.speechRecognitionLanguage = "zh-CN";
-            const localSaveDirectoryPath = path.join( __dirname.split("node_modules")[0], "audio/" + this.message.content.searchableContent + ".mav");
-            const electron = require('electron');
-            // Importing dialog module using remote
-            // const dialog = electron.remote.dialog;
-            console.log("BG", __dirname.split("node_modules")[0])
-            console.log("FG", localSaveDirectoryPath)
-            fs.writeFile(localSaveDirectoryPath, 
-                        this.message.content.remoteMediaUrl, function (err) {
-                if (err) throw err;
-                console.log('Saved!', localSaveDirectoryPath);
-            });
+            const localSaveDirectoryPath = path.join( __dirname.split("node_modules")[0], "audio/" + this.getFilenameFromUrl(this.message.content.remoteMediaUrl));
+            console.log("localSaveDirectoryPath", localSaveDirectoryPath)
+            this.downloadFile(this.message.content.remoteMediaUrl, localSaveDirectoryPath).then(res=>{
+                console.log("RES", res);
+            })
+            
+            // const electron = require('electron');
+            // // Importing dialog module using remote
+            // // const dialog = electron.remote.dialog;
+            // // console.log("BG", __dirname.split("node_modules")[0])
+            // console.log("FG", localSaveDirectoryPath)
+            // fs.writeFile(localSaveDirectoryPath, 
+            //             this.message.content.remoteMediaUrl, function (err) {
+            //     if (err) throw err;
+            //     console.log('Saved!', localSaveDirectoryPath);
+            // });
 
             // dialog.showSaveDialog({
             //     title: 'Select the File Path to save',
@@ -135,6 +143,20 @@ export default {
             store.playVoice(this.message)
             this.convertSpeechToText();
         },
+
+        async downloadFile(remoteFileUrl, localPath){
+            return new Promise(function(resolve, reject){
+                var req = request({
+                    method: 'GET',
+                    uri: remoteFileUrl
+                });
+
+                var out = fs.createWriteStream(localPath);
+                req.pipe(out);
+
+            });
+        }
+
     },
 
     computed: {
