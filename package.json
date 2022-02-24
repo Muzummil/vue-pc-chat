@@ -1,6 +1,6 @@
 {
   "name": "wf-pc-chat",
-  "version": "0.3.0",
+  "version": "0.5.0",
   "private": true,
   "homepage": "https://pandadb.net",
   "maintainers": [
@@ -40,7 +40,7 @@
     "core-js": "^3.6.5",
     "detectrtc": "^1.4.1",
     "draggable-vue-directive": "^2.1.0",
-    "electron-screenshots": "0.1.2",
+    "electron-screenshots": "^0.1.2",
     "electron-tabs": "^0.15.0",
     "electron-window-state": "^5.0.3",
     "electron-windows-badge": "^1.1.0",
@@ -80,7 +80,7 @@
     "babel-eslint": "^10.1.0",
     "cpy-cli": "^3.1.1",
     "del-cli": "^3.0.1",
-    "electron": "^8.5.5",
+    "electron": "15.3.4",
     "electron-devtools-installer": "^3.1.0",
     "eslint": "^6.7.2",
     "eslint-plugin-vue": "^6.2.2",
@@ -88,7 +88,7 @@
     "native-ext-loader": "^2.3.0",
     "npm-force-resolutions": "0.0.10",
     "shelljs": "^0.8.4",
-    "vue-cli-plugin-electron-builder": "~2.0.0-rc.5",
+    "vue-cli-plugin-electron-builder": "^2.0.0",
     "vue-template-compiler": "^2.6.11"
   },
   "eslintConfig": {

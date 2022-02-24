@@ -41,6 +41,12 @@ export default class Config {
     // 文件传输助手ID
     static FILE_HELPER_ID = 'wfc_file_transfer';
 
+    /**
+     * 允许重新编辑多长时间内的撤回消息，单位是秒
+     */
+    static RECALL_REEDIT_TIME_LIMIT = 60;
+
+
     static getWFCPlatform() {
         if (isElectron()) {
             if (window.process && window.process.platform === 'darwin') {
@@ -61,5 +67,22 @@ export default class Config {
         Object.keys(options).forEach(key => {
             Config[key] = options[key];
         });
+    }
+
+    /**
+     * 网络地址重定向
+     *
+     * 仅当双网环境时，需要特殊处理，默认原样返回
+     *
+     * @param {string} url
+     * @return {string} newUrl
+     */
+    static urlRedirect(url){
+        if (!url){
+            return url;
+        }
+        // 示例代码
+        // url = url.replace('oss.xxxx.com', '192.168.2.19');
+        return url;
     }
 }

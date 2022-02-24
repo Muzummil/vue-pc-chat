@@ -6,6 +6,10 @@ module.exports = {
     chainWebpack: config => {
         config.module.rules.delete('eslint');
     },
+    configureWebpack: {
+        // Webpack configuration applied to web builds and the electron renderer process
+        target: "electron-renderer"
+    },
 
     pluginOptions: {
         chainWebpack: config => {
@@ -36,7 +40,8 @@ module.exports = {
             chainWebpackRendererProcess: (config) => {
                 // Chain webpack config for electron renderer process only (won't be applied to web builds)
             },
-            nodeIntegration: true,
+            // nodeIntegration: true,
+            contextIsolation: false,
             webSecurity: false,
             // Use this to change the entrypoint of your app's main process
             // mainProcessFile: 'src/myBackgroundFile.js',
@@ -70,7 +75,16 @@ module.exports = {
                 hardenedRuntime: true,
                 gatekeeperAssess: false,
                 entitlements: "build/mac/entitlements.mac.plist",
-                entitlementsInherit: "build/mac/entitlements.mac.plist"
+                entitlementsInherit: "build/mac/entitlements.mac.plist",
+                target: [
+                    {
+                        target:'default',
+                        arch:[
+                          'universal'
+                        ]
+
+                    }
+                ]
               },
               linux: {
                 category: "Chat",

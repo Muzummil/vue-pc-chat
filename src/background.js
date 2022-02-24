@@ -40,6 +40,7 @@ const isDevelopment = process.env.NODE_ENV !== 'production'
 
 const workingDir = isDevelopment ? `${__dirname}/public` : `${__dirname}`;
 
+require('@electron/remote/main').initialize()
 let Locales = {};
 i18n.configure({
     locales: ['en', 'ch'],
@@ -542,12 +543,13 @@ const createMainWindow = async () => {
     if (process.env.WEBPACK_DEV_SERVER_URL) {
         // Load the url of the dev server if in development mode
         await mainWindow.loadURL(process.env.WEBPACK_DEV_SERVER_URL)
-        if (!process.env.IS_TEST) mainWindow.webContents.openDevTools()
+        //if (!process.env.IS_TEST) mainWindow.webContents.openDevTools()
     } else {
         createProtocol('app')
         // Load the index.html when not in development
         mainWindow.loadURL('app://./index.html')
     }
+    require("@electron/remote/main").enable(mainWindow.webContents);
     mainWindow.webContents.on('did-finish-load', (e) => {
         try {
             mainWindow.show();
@@ -632,6 +634,10 @@ const createMainWindow = async () => {
         updateTray(count);
         app.badgeCount = count;
         //}
+    });
+    app.on('remote-require', (event, args) => {
+        // event.preventDefault();
+        event.returnValue = require('@electron/remote/main');
     });
 
     ipcMain.on('file-paste', (event) => {
@@ -864,12 +870,14 @@ function createWindow(url, w, h, mw, mh, resizable = true, maximizable = true, s
             minHeight: mh,
             resizable: resizable,
             maximizable: maximizable,
+            minimizable: true,
             titleBarStyle: showTitle ? 'default' : 'hiddenInset',
             // titleBarStyle: 'customButtonsOnHover',
             webPreferences: {
                 scrollBounce: false,
                 nativeWindowOpen: true,
                 nodeIntegration: true,
+                contextIsolation: false,
                 webviewTag: true
             },
             // frame:false
@@ -879,6 +887,7 @@ function createWindow(url, w, h, mw, mh, resizable = true, maximizable = true, s
 
     win.loadURL(url);
     console.log('create windows url', url)
+    require("@electron/remote/main").enable(win.webContents);
     win.webContents.on('new-window', (event, url) => {
         event.preventDefault();
         console.log('new-windows', url)
