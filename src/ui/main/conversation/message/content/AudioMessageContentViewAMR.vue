@@ -1,6 +1,5 @@
 <template>
     <div ref="container" class="audio-message-container" :style="widthStyle" @click="playVoice">
-        DDD
         <!--    <i class="icon-ion-android-volume-up"></i>-->
         <!--    <span> {{ duration }} </span>-->
 
@@ -28,6 +27,7 @@ const fs = require('fs');
 const path = require('path');
 const sdk = require("microsoft-cognitiveservices-speech-sdk");
 const speechConfig = sdk.SpeechConfig.fromSubscription("81a0f68c4dcb4c42ac8e6e0717c0f71d", "southeastasia");
+const request = require('request');
 
 export default {
     name: "AudioMessageContentView",
@@ -60,12 +60,19 @@ export default {
         },
         convertSpeechToText(){
             console.log(this.message.content.remoteMediaUrl)
+            const remoteFileName = this.getFilenameFromUrl(this.message.content.remoteMediaUrl);
+            if(!remoteFileName.includes('.wav')){
+                console.log("Unsupported format for speech to text");
+                return;
+            }
             
-            speechConfig.speechRecognitionLanguage = "zh-CN";
-            const localSaveDirectoryPath = path.join( __dirname.split("node_modules")[0], "audio/" + this.getFilenameFromUrl(this.message.content.remoteMediaUrl));
+            const localSaveDirectoryPath = path.join( __dirname.split("node_modules")[0], "src/assets/audio/" + remoteFileName);
             console.log("localSaveDirectoryPath", localSaveDirectoryPath)
             this.downloadFile(this.message.content.remoteMediaUrl, localSaveDirectoryPath).then(res=>{
-                console.log("RES", res);
+                console.log("RES", res.path);
+                this.convertLocalFileToText(res.path.replace(/\\/g, "/"));
+            }, (error)=>{
+                console.log("RES2", error);
             })
             
             // const electron = require('electron');
@@ -109,33 +116,38 @@ export default {
             // }); 
 
             // fs.writeFileSync("C:/Users/97156/Downloads", "hello world", 'utf-8');
+        },
+        convertLocalFileToText(localFilePath){
+            try{
+                let audioConfig = sdk.AudioConfig.fromWavFileInput(fs.readFileSync(localFilePath));
+                speechConfig.speechRecognitionLanguage = "zh-CN";
+                let speechRecognizer = new sdk.SpeechRecognizer(speechConfig, audioConfig);
+                console.log("localFilePath", localFilePath);
+                console.log("audioConfig", audioConfig)
+                speechRecognizer.recognizeOnceAsync(result => {
+                    console.log("SPEECH", result)
+                    switch (result.reason) {
+                        case sdk.ResultReason.RecognizedSpeech:
+                            console.log(`RECOGNIZED: Text=${result.text}`);
+                            break;
+                        case sdk.ResultReason.NoMatch:
+                            console.log("NOMATCH: Speech could not be recognized.");
+                            break;
+                        case sdk.ResultReason.Canceled:
+                            const cancellation = CancellationDetails.fromResult(result);
+                            console.log(`CANCELED: Reason=${cancellation.reason}`);
 
-            let audioConfig = sdk.AudioConfig.fromWavFileInput(fs.readFileSync("C:/Users/97156/Downloads/chinease.wav"));
-            console.log("audioConfig", audioConfig)
-            let speechRecognizer = new sdk.SpeechRecognizer(speechConfig, audioConfig);
-
-            speechRecognizer.startContinuousRecognitionAsync((result) => {
-                console.log("SPEECH", result)
-                switch (result.reason) {
-                    case sdk.ResultReason.RecognizedSpeech:
-                        console.log(`RECOGNIZED: Text=${result.text}`);
-                        break;
-                    case sdk.ResultReason.NoMatch:
-                        console.log("NOMATCH: Speech could not be recognized.");
-                        break;
-                    case sdk.ResultReason.Canceled:
-                        const cancellation = CancellationDetails.fromResult(result);
-                        console.log(`CANCELED: Reason=${cancellation.reason}`);
-
-                        if (cancellation.reason == sdk.CancellationReason.Error) {
-                            console.log(`CANCELED: ErrorCode=${cancellation.ErrorCode}`);
-                            console.log(`CANCELED: ErrorDetails=${cancellation.errorDetails}`);
-                            console.log("CANCELED: Did you update the key and location/region info?");
-                        }
-                        break;
-                }    
-                speechRecognizer.close();
-            });
+                            if (cancellation.reason == sdk.CancellationReason.Error) {
+                                console.log(`CANCELED: ErrorCode=${cancellation.ErrorCode}`);
+                                console.log(`CANCELED: ErrorDetails=${cancellation.errorDetails}`);
+                                console.log("CANCELED: Did you update the key and location/region info?");
+                            }
+                            break;
+                    }    
+                    speechRecognizer.close();
+                });
+            }catch(e){}
+            
         },
         playVoice() {
             console.log("MSG", this.message)
@@ -144,7 +156,7 @@ export default {
             this.convertSpeechToText();
         },
 
-        async downloadFile(remoteFileUrl, localPath){
+        downloadFile(remoteFileUrl, localPath){
             return new Promise(function(resolve, reject){
                 var req = request({
                     method: 'GET',
@@ -153,7 +165,7 @@ export default {
 
                 var out = fs.createWriteStream(localPath);
                 req.pipe(out);
-
+                resolve(out);
             });
         }
 
