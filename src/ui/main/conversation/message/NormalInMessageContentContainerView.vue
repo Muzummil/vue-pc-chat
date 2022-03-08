@@ -1,6 +1,6 @@
 <template>
     <section class="container">
-        <div class="message-time-container"
+        <div class="message-time-container  message-in-container"
              v-bind:class="{checked:sharedPickState.messages.indexOf(message) >= 0}">
             <p v-if="this.message._showTime" class="time">{{ message._timeStr }}</p>
             <div class="message-avatar-content-container">

@@ -9,6 +9,7 @@ import Long from 'long';
 import impl from '../proto/proto.min';
 import Config from "../../config";
 import avenginekit from "../av/engine/avenginekitproxy";
+import Message from '../messages/message.js';
 
 
 export class WfcManager {
@@ -1431,8 +1432,18 @@ export class WfcManager {
         return impl.deleteMessageById(messageId);
     }
 
-    pinUnpinMessage(msgUid, pinStatus, messageContent, successCB, failCB){
-        impl.pinUnpinMessage(msgUid, pinStatus, messageContent, successCB, failCB);
+    /**
+    * 更新远程消息消息内容，只有专业版支持。客户端仅能更新自己发送的消息，更新的消息类型不能变，更新的消息类型是服务配置允许更新的内容。Server API更新则没有限制。
+     * @param {Message} message message to get different values like id, uid, content etc
+     * @param {function ()} successCB
+     * @param {function (number)} failCB
+     */
+    pinUnpinMessage(message, successCB = null, failCB = null){
+        impl.pinUnpinMessage(message, successCB, failCB);
+    }
+
+    updatePinMessageStatusByEvent(message){
+        impl.onPinUnpinMessage(message);
     }
 
     /**

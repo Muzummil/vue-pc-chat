@@ -8,6 +8,7 @@
 <script>
 import Message from "@/wfc/messages/message";
 import {parser as emojiParse} from "@/ui/util/emoji";
+import { stringValue } from '../../../../../wfc/util/longUtil';
 
 export default {
     name: "TextMessageContentView",
@@ -44,6 +45,9 @@ export default {
                     document.selection.empty();
                 }
             }
+        },
+        getUid(message){
+            return stringValue(message.messageUid)
         }
     },
 
@@ -60,7 +64,6 @@ export default {
                 tmp = tmp.replace(/<img/g, '<img style="max-width:800px;"')
                 return tmp;
             }
-            console.log("TMP", tmp)
             return tmp;
         }
     }

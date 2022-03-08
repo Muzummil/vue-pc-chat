@@ -1,5 +1,5 @@
 <template>
-        <TextMessageContentView :message="message"
+    <TextMessageContentView :message="message"
                             v-if="message.messageContent.type === 1"
                             :style="{'--out-arrow-color':'#98ea70', '--in-arrow-color':'white'}"
                             v-bind:class="{leftarrow:message.direction === 1, rightarrow: message.direction === 0}"/>

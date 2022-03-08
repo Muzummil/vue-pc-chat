@@ -22,22 +22,21 @@
                  :dummy_just_for_reactive="currentVoiceMessage"
             >
                 <!-- Start Pin/Unpin Message -->
-                <div v-if="pinnedMessage" class="pin-messages-container">
+                <div v-if="(getPinnedMessage && getPinnedMessage.content) || (pinnedMessage && pinnedMessage.content)" class="pin-messages-container">
                     <div class="flex-row justify-content-between flex-align-center">
                         <div class="text-section flex-row relative flex-align-center">
                             <div class="pin-line"></div>
                             <div class="pinned-message-content">
                                 <div class="flex-column">
                                     <div class="pin-label">Pinned Message</div>
-                                    <div class="pin-message">{{pinnedMessage.content.searchableContent}}</div>
+                                    <div class="pin-message">{{(pinnedMessage && pinnedMessage.content) ? pinnedMessage.content.searchableContent : getPinnedMessage.content.searchableContent}}</div>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="close-pinned">
+                        <div v-if="getPinnedMessage.direction == 0" @click.prevent="unpinMessage(pinnedMessage ? pinnedMessage : getPinnedMessage)" class="close-pinned">
                             <div class="cross">
                                 X
-                                <!-- <span class="icon-ion-close-circled"></span> -->
                             </div>
                         </div>
                     </div>
@@ -71,6 +70,9 @@
                                     @click.native.capture="sharedConversationState.enableMessageMultiSelection ? clickMessageItem($event, message) : null"
                                     :message="message"
                                     v-else/>
+                                <div v-if="showMsgPinIcon(message)" class="pin-icon-container" v-bind:class="{ 'in-msg-icon-start' : message.direction !== 0}">
+                                    <img class="tick-icon" src="../../../assets/icons/pin_msg_icon.png" >
+                                </div>
                             </template>
                             
                         </li>
@@ -108,8 +110,11 @@
 
                 <vue-context ref="menu" v-slot="{data:message}" :close-on-scroll="true" v-on:close="onMenuClose">
                     <!--          更多menu item-->
-                    <li v-if="isPinable(message)">
-                        <a @click.prevent="pinUnpin(message)">{{ $t('common.pin_msg') }}</a>
+                    <li v-if="isPinable(message) && !isPinned(message)">
+                        <a @click.prevent="pinUnpin(message)"> {{ $t('common.pin_msg') }}</a>
+                    </li>
+                    <li v-if="isPinable(message) && isPinned(message)">
+                        <a @click.prevent="unpinMessage(message)"> {{ $t('common.pin_msg') }}</a>
                     </li>
                     <li v-if="isCopyable(message)">
                         <a @click.prevent="copy(message)">{{ $t('common.copy') }}</a>
@@ -165,6 +170,7 @@ import NotificationMessageContent from "@/wfc/messages/notification/notification
 import TextMessageContent from "@/wfc/messages/textMessageContent";
 import store from "@/store";
 import wfc from "@/wfc/client/wfc";
+import EventType from "@/wfc/client/wfcEvent";
 import {numberValue} from "@/wfc/util/longUtil";
 import InfiniteLoading from 'vue-infinite-loading';
 import MultiSelectActionView from "@/ui/main/conversation/MessageMultiSelectActionView";
@@ -220,7 +226,8 @@ export default {
             dragAndDropEnterCount: 0,
             // FIXME 选中一个会话，然后切换到其他page，比如联系人，这时该会话收到新消息或发送消息，会导致新收到/发送的消息的界面错乱，尚不知道原因，但这么做能解决。
             fixTippy: false,
-            showScrollButton:  false
+            showScrollButton:  false,
+            pinnedMessage: store.state.conversation.currentConversationMessageList.pinnedMessage
         };
     },
 
@@ -228,7 +235,20 @@ export default {
         this.fixTippy = true;
         this.$eventBus.$on('force-scroll-conversation-bottom', args=> {
             this.scrollToBottom();
+        });
+
+        this.$eventBus.$on('pin-unpin-change', args=> {
+            console.log("EVENT")
+            this.resetPinnedMessages();
         })
+        wfc.eventEmitter.on(EventType.PinMessage, () => {
+            console.log("EVENT222")
+            this.resetPinnedMessages();
+        });
+        wfc.eventEmitter.on(EventType.UnpinMessage, () => {
+            console.log("EVENT3333")
+            this.resetPinnedMessages();
+        });
     },
 
     deactivated() {
@@ -394,7 +414,24 @@ export default {
             return message && (message.messageContent instanceof TextMessageContent || message.messageContent instanceof ImageMessageContent);
         },
         isPinable(message) {
-            return message && (message.messageContent instanceof TextMessageContent);
+            return message && (message.messageContent instanceof TextMessageContent) && message.direction == 0;
+        },
+        isPinned(message) {
+            let msgExtra = message.messageContent.extra; 
+            let isPinned = false;
+            console.log(msgExtra)
+            if(!msgExtra || msgExtra == ''){
+                return false;
+            }
+            if(typeof msgExtra !== 'string' && msgExtra.isPinned){
+                isPinned = true;
+            }else if(JSON.parse(msgExtra).isPinned){
+                isPinned = true;
+            }else{
+                isPinned = false;
+            }
+            console.log("isPinned", isPinned)
+            return isPinned;
         },
         isDownloadAble(message) {
             return message && (message.messageContent instanceof ImageMessageContent
@@ -473,20 +510,54 @@ export default {
                 copyImg(content.remotePath)
             }
         },
+        unpinMessage(message){
+            console.log("UNPIN")
+            let unpinExtra = {
+                "isPinned": false,
+                "isUpdated": false
+            }
+            message.messageContent.extra = JSON.stringify(unpinExtra);
+            this.updateMsgPinStatus(message);
+        },
         pinUnpin(message){
+            console.log("START", message);
+            debugger
+            message = this.toggleMessageExtra(message);
+            console.log("MSG22", stringValue(message.messageUid));
             console.log("MSG", message);
-            // let msg = wfc.getMessageById(messageId);
-            let msgExtra = {
-                "isPinned": true,
-                "isUpdated": true
+            debugger
+            store.updatePinnedStatusBeforeNewPinned(message, ()=>{
+                console.log("GOTIT", message)
+                debugger
+                this.updateMsgPinStatus(message);
+            });
+
+        },
+        toggleMessageExtra(message){
+            console.log("BEFORE TOGGLE", JSON.stringify(message))
+            let msgExtra = message.messageContent ? message.messageContent.extra : null;
+            let msgOverriddenExtra;
+            if(msgExtra && msgExtra !== ''){
+                msgOverriddenExtra = {
+                    "isPinned": !(JSON.parse(msgExtra).isPinned),
+                    "isUpdated": false
+                }
+            }else{
+                msgOverriddenExtra = {
+                    "isPinned": true,
+                    "isUpdated": false
+                }
             }
-            if (message) {
-                message.content.extra = msgExtra;
-                console.log("MSG22", message);
-                wfc.pinUnpinMessage(message.messageId, true,  message.messageContent, true, true);
-                console.log("AVVV", this.conversationInfo.conversation)
-                // wfc.updateMessageContent(message.messageId,  message.messageContent);
-            }
+            message.messageContent.extra = JSON.stringify(msgOverriddenExtra);
+            console.log("AFTER TOGGLE", JSON.stringify(message))
+            return message;
+        },
+        updateMsgPinStatus(message){
+            wfc.pinUnpinMessage(message, ()=>{
+                debugger
+                console.log("TRIGGERED");
+                this.$eventBus.$emit('pin-unpin-change', true);
+            }, true);
         },
         download(message) {
             if (isElectron()) {
@@ -715,6 +786,91 @@ export default {
 
         mentionMessageSender(message) {
             this.$refs.messageInputView.mention(message.conversation.target, message.from);
+        },
+        resetPinnedMessages(){
+            console.log("DDD2222", this.sharedConversationState.currentConversationMessageList)
+            let pinnedMessage = this.sharedConversationState.currentConversationMessageList.filter(message=>  {
+                if(message.content.extra && JSON.parse(message.content.extra).isPinned){
+                    console.log("EX", JSON.parse(message.content.extra))
+                    return message
+                }
+
+            })[0];
+            console.log("pinnedMessages",pinnedMessage)
+            // this.pinnedMessage = pinnedMessage;
+            this.$set(this, "pinnedMessage", pinnedMessage)
+            setTimeout(() => {
+                this.getMessages();
+            }, 500);
+             setTimeout(() => {
+                this.getMessages();
+            }, 1000);
+        },
+        getMessages(){
+            console.log("END", this.sharedConversationState.currentConversationMessageList)
+                let pinnedMessage = {};
+                 for(let i=0;i < this.sharedConversationState.currentConversationMessageList.length; i++){
+                    let msg = this.sharedConversationState.currentConversationMessageList[i];
+                    let msgExtra = msg.messageContent.extra;
+                    if(msgExtra){
+                        if(typeof msgExtra !== 'string' && msgExtra.isPinned){
+                            pinnedMessage = msg;
+                        }else if(JSON.parse(msg.messageContent.extra).isPinned){
+                            pinnedMessage = msg;
+                        }
+                    }
+                }
+
+                // for(let i=0; i < this.sharedConversationState.currentConversationMessageList.length; i++){
+                //     let message = this.sharedConversationState.currentConversationMessageList[i];
+                //     // message.content.extra = JSON.stringify(message.content.extra);
+                //     let parsedExtra;
+                //     try{
+                //         parsedExtra = JSON.parse(message.messageContent.extra);
+                //     }catch(e){
+                //         console.log(e);
+                //     }
+                //     setTimeout(() => {
+                //         console.log("CCCCCCC", message, message.messageContent.extra, parsedExtra['isPinned'])
+                //         if(parsedExtra && parsedExtra['isPinned']){
+                //             console.log("EX", parsedExtra)
+                //             pinnedMessage = message;
+                //             return;
+                //         }    
+                //     }, 100);
+                    
+                // }
+                // let pinnedMessage = this.sharedConversationState.currentConversationMessageList.filter(message=>  {
+                //     console.log("CCCCCCC", message.content.extra, JSON.parse(message.content.extra)['isPinned'])
+                //     if(message.content.extra && message.content.extra !== ''){
+                //         console.log("EX", JSON.parse(message.content.extra))
+                //         return message
+                //     }
+
+                // });
+                this.$set(this, "pinnedMessage", pinnedMessage)
+                console.log("pinnedMessages",pinnedMessage)
+                return pinnedMessage;
+        },
+         getUniqueListBy(arr, key = 'messageUid') {
+            return [...new Map(arr.map(item => [ stringValue(item[key]), item])).values()]
+        },
+        showMsgPinIcon(message){
+            let ret = false;
+            let msgExtra = message.messageContent.extra; 
+            if(msgExtra){
+                if(typeof msgExtra !== 'string' && msgExtra.isPinned){
+                    ret = true;
+                }else if(JSON.parse(message.messageContent.extra).isPinned){
+                    ret = true;
+                }
+            }
+            return ret;
+            // if(message.messageContent && message.messageContent.extra){
+            //     return JSON.parse(message.messageContent.extra).isPinned ? true : false;
+            // }
+
+            // return false;
         }
     },
 
@@ -786,6 +942,7 @@ export default {
         if (!this.sharedConversationState.currentConversationInfo) {
             return;
         }
+        // this.resetPinnedMessages();
     },
     updated() {
         this.popupItem = this.$refs['setting'];
@@ -830,11 +987,12 @@ export default {
         checkShowScrollBtnComp(){
             return this.showScrollButton;
         },
-        pinnedMessage(){
-            console.log("DDD", this.sharedConversationState.currentConversationMessageList)
-            let pinnedMessages = this.sharedConversationState.currentConversationMessageList.filter(message=> message.content.extra.isPinned);
-            console.log("pinnedMessages",pinnedMessages)
-            return pinnedMessages[0];
+        getPinnedMessage: {
+            get(){
+                
+                // this.pinnedMessage = pinnedMessage;
+                return this.getMessages();
+            }
         }
     },
 
@@ -1069,8 +1227,22 @@ export default {
     align-items: center;
     justify-content: center;
     text-align: center;
+    cursor: pointer;
 }
 .cross{
     color: #5f77bd;
+}
+.pin-icon-container {
+    display: flex;
+    justify-content: flex-end;
+    padding: 0px 50px;
+    align-items: center;
+    margin-top: -22px;
+}
+.pin-icon-container.in-msg-icon-start {
+    justify-content: flex-start !important;
+}
+.pin-icon-container img{
+    width: 15px
 }
 </style>
