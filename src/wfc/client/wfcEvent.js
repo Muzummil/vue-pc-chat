@@ -45,4 +45,8 @@ export default class EventType {
 
     // function (event) {}
     static ConferenceEvent = 'conferenceEvent';
+
+    static PinMessage = 'pinMessage';
+
+    static UnpinMessage = 'unpinMessage';
 }

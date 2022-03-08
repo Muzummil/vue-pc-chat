@@ -531,7 +531,7 @@ const createMainWindow = async () => {
             contextIsolation: false,
             nativeWindowOpen: true,
             webSecurity: false,
-            devTools: !app.isPackaged,
+            devTools: true,
         },
         frame: !isWin,
         icon

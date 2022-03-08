@@ -1,6 +1,6 @@
 <template>
     <section>
-        <div class="message-time-container" v-bind:class="{checked:sharedPickState.messages.indexOf(message) >= 0}">
+        <div class="message-time-container message-out-container" v-bind:class="{checked:sharedPickState.messages.indexOf(message) >= 0}">
             <p v-if="this.message._showTime" class="time">{{ message._timeStr }}</p>
             <div class="message-content-container"
                  v-bind:class="{checked:sharedPickState.messages.indexOf(message) >= 0}">
@@ -15,11 +15,7 @@
                     <i v-if="message.status === 2" class="icon-ion-close-circled" style="color: red" @click="resend"/>
 
                     <div class="flex-row flex-align-end gap-2">
-                        <div>
-                            <p v-if="shouldShowMessageReceipt && message.status > 0" class="status-tick-container">
-                                <img class="tick-icon" :src="messageStatusTickImgUrl" >
-                            </p>
-                        </div>
+                        
                         <div class="flex-column flex-align-end">
                             <MessageContentContainerView :message="message"
                                                         class="message-content-container-view"
@@ -34,8 +30,6 @@
                                             :show-close-button="false"/>
                         </div>
                     </div>
-
-                    
 
                     <tippy
                         :to="'infoTrigger' + this.message.messageId"
@@ -57,6 +51,13 @@
                          draggable="false"
                          :src="message._from.portrait">
                 </div>
+            </div>
+
+
+            <div class="status-tick-container">
+                <p v-if="shouldShowMessageReceipt && message.status > 0">
+                    <img class="tick-icon" :src="messageStatusTickImgUrl" >
+                </p>
             </div>
             
         </div>
@@ -331,7 +332,7 @@ export default {
     /*max-height: 800px;*/
     margin-left: auto;
     text-overflow: ellipsis;
-    align-items: flex-start;
+    /* align-items: flex-start; */
 }
 
 .message-avatar-content-container .avatar {
@@ -349,7 +350,6 @@ export default {
     width: 17px;
 }
 .status-tick-container{
-    margin-right: -5px;
-    margin-bottom: -6px;
+    padding: 0px 25px;
 }
 </style>
