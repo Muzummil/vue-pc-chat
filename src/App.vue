@@ -61,10 +61,29 @@ import IpcMain from "./ipc/ipcMain";
 import {currentWindow} from "./platform";
 
 import 'viewerjs/dist/viewer.css';
-import { component as Viewer } from "v-viewer"
-import VueViewer from 'v-viewer'
-import Vue from 'vue'
+import { component as Viewer } from "v-viewer";
+import VueViewer from 'v-viewer';
+import Vue from 'vue';
+import Zendesk from '@dansmaculotte/vue-zendesk';
+
 Vue.use(VueViewer)
+Vue.use(Zendesk, {
+  key: '9877f66a-f2b0-4b92-bbbc-1904d814e0b2',
+  settings: {
+    webWidget: {
+      answerBot: {
+        suppress: true,
+        title: {
+          '*': 'Chat with us!'
+        },
+        contactOnlyAfterQuery: false,
+        search: {
+          labels: ['I would like help.']
+        },
+      }
+    }
+  }
+})
 export default {
     name: 'App',
     components: {
@@ -128,7 +147,8 @@ export default {
         window.addEventListener('focus', this.onfocus)
 
         if (isElectron()){
-        		currentWindow.minimizable = this.sharedMiscState.enableMinimize;
+            currentWindow.minimizable = this.sharedMiscState.enableMinimize;
+            this.$zendesk.show()
         }
     },
 

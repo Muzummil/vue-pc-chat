@@ -28,6 +28,7 @@
   "main": "background.js",
   "dependencies": {
     "@coddicat/vue-pinch-scroll-zoom": "^3.2.1",
+    "@dansmaculotte/vue-zendesk": "^0.4.4",
     "@electron/remote": "^2.0.1",
     "@imndx/v-emoji-picker": "^2.3.7",
     "anchorme": "^2.1.2",
