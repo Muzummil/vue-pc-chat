@@ -805,7 +805,7 @@ export default {
             this.$set(this, "pinnedMessage", pinnedMessage)
             setTimeout(() => {
                 this.getMessages();
-            }, 600);
+            }, 500);
              setTimeout(() => {
                 this.getMessages();
             }, 1000);
