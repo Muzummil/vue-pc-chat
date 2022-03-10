@@ -24,7 +24,7 @@
                 <!-- Start Pin/Unpin Message -->
                 <div v-if="(getPinnedMessage && getPinnedMessage.content) || (pinnedMessage && pinnedMessage.content)" class="pin-messages-container">
                     <div class="flex-row justify-content-between flex-align-center">
-                        <div class="text-section flex-row relative flex-align-center">
+                        <div @click.prevent="scrollToPinnedMessage(pinnedMessage)" class="text-section flex-row relative flex-align-center">
                             <div class="pin-line"></div>
                             <div class="pinned-message-content">
                                 <div class="flex-column">
@@ -58,7 +58,7 @@
                     </infinite-loading>
                     <ul>
                         <li v-for="(message) in sharedConversationState.currentConversationMessageList"
-                            :key="message.messageId">
+                            :key="message.messageId" :id="message.messageId">
                             <template v-if="message.messageId > 0">
                                 <!--todo 不同的消息类型 notification in out-->
                                 <NotificationMessageContentView :message="message" v-if="isNotificationMessage(message)"/>
@@ -303,7 +303,12 @@ export default {
         toggleConversationInfo() {
             this.showConversationInfo = !this.showConversationInfo;
         },
-
+        scrollToPinnedMessage(pinnedMessage){
+            document.getElementById(pinnedMessage.messageId).scrollIntoView({
+                behavior: "smooth",
+                block: 'center'
+            });
+        },
         toggleMessageMultiSelectionActionView(message) {
             if (!this.sharedConversationState.enableMessageMultiSelection) {
                 this.saveMessageListViewFlexGrow = this.$refs['conversationMessageList'].style.flexGrow;
@@ -788,7 +793,6 @@ export default {
             this.$refs.messageInputView.mention(message.conversation.target, message.from);
         },
         resetPinnedMessages(){
-            console.log("DDD2222", this.sharedConversationState.currentConversationMessageList)
             let pinnedMessage = this.sharedConversationState.currentConversationMessageList.filter(message=>  {
                 if(message.content.extra && JSON.parse(message.content.extra).isPinned){
                     console.log("EX", JSON.parse(message.content.extra))
@@ -1244,5 +1248,8 @@ export default {
 }
 .pin-icon-container img{
     width: 15px
+}
+.text-section{
+    cursor: pointer;
 }
 </style>

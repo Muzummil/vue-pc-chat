@@ -228,7 +228,7 @@ let store = {
                     let msgIndex = conversationState.currentConversationMessageList.findIndex(m => {
                         return m.messageId === msg.messageId;
                     });
-                    this.changePinStatus(msg);
+                    this.changePinStatus(msg);                        
                     if (msgIndex > -1) {
                         return;
                     }
@@ -243,13 +243,11 @@ let store = {
                     let sameUidMessageIndex = conversationState.currentConversationMessageList.findIndex(message=>{
                         return stringValue(message.messageUid) == stringValue(msg.messageUid) 
                     })
-                    console.log("sameUidMessageIndex", sameUidMessageIndex)
                     if(sameUidMessageIndex < 0){
                         conversationState.currentConversationMessageList.push(msg);
                     }else{
                         conversationState.currentConversationMessageList[sameUidMessageIndex] = msg;
                     }
-                    console.log("FILTERED", conversationState.currentConversationMessageList)
                     conversationState.currentConversationOldestMessageId = conversationState.currentConversationMessageList[0].messageId;
                     conversationState.currentConversationOldestMessageUid = conversationState.currentConversationMessageList[0].messageUid;
                 }catch(e){}
@@ -311,34 +309,21 @@ let store = {
             this._loadDefaultConversationList();
             if (conversationState.currentConversationInfo) {
                 if (conversationState.currentConversationMessageList) {
-                    console.log("TOBE",messageUid, conversationState.currentConversationMessageList, conversationState.currentConversationMessageList.filter(msg=> stringValue(msg.messageUid) == messageUid));
                     let msgIndex = conversationState.currentConversationMessageList.findIndex(msg=>  stringValue(msg.messageUid) === messageUid);
-                    console.log("In pin44", msgIndex)
                     let pinnedMessageLocal = conversationState.currentConversationMessageList.filter(msg => stringValue(msg.messageUid) === messageUid)[0]
-                    console.log("In pin55", pinnedMessageLocal)
                     pinnedMessageLocal.messageContent.extra = JSON.stringify({ isPinned: true, isUpdated: false});
-                    // conversationState.currentConversationMessageList.pinnedMessage = {};
-                    console.log("pinnedMessageLocal", pinnedMessageLocal)
                     conversationState.currentConversationMessageList[msgIndex] = pinnedMessageLocal;
-                    debugger
-                    // conversationState.currentConversationMessageList.pinnedMessage = conversationState.currentConversationMessageList.filter(msg => msg.messageId === messageId)[0]
                 }
             }
         });
         wfc.eventEmitter.on(EventType.UnpinMessage, (messageUid) => {
             this._loadDefaultConversationList();
-            console.log("TOBE22",messageUid, conversationState.currentConversationMessageList, conversationState.currentConversationMessageList.filter(msg=> stringValue(msg.messageUid) == messageUid));
             if (conversationState.currentConversationInfo) {
                 if (conversationState.currentConversationMessageList) {
                     let msgIndex = conversationState.currentConversationMessageList.findIndex(msg=>  stringValue(msg.messageUid) === messageUid);
-                    console.log("In unpin44", msgIndex)
                     let pinnedMessageLocal = conversationState.currentConversationMessageList.filter(msg => stringValue(msg.messageUid) === messageUid)[0]
-                    console.log("In unpin55", pinnedMessageLocal)
                     pinnedMessageLocal.messageContent.extra = JSON.stringify({ isPinned: false, isUpdated: false});
-                    // conversationState.currentConversationMessageList.pinnedMessage = {};
-                    console.log("pinnedMessageLocal", pinnedMessageLocal)
                     conversationState.currentConversationMessageList[msgIndex] = pinnedMessageLocal;
-                    debugger
                 }
             }
         });
@@ -448,18 +433,16 @@ let store = {
         if(receivedMessage.direction == 1){
             setTimeout(() => {
                 let ownPinnedMessage = this.getOwnPinnedMessage();
-                console.log("COMPARE", receivedMessage, ownPinnedMessage)
                 debugger
                 if(ownPinnedMessage && msgContentExtraObj.isPinned && stringValue(receivedMessage.messageUid) !== stringValue(ownPinnedMessage.messageUid)){
                     ownPinnedMessage.messageContent.extra = JSON.stringify({isPinned: false, isUpdated: false});
-                    console.log("ownPinnedMessage", ownPinnedMessage)
                     wfc.pinUnpinMessage(ownPinnedMessage, ()=>{
-                        console.log("CALLED")
                         wfc.updatePinMessageStatusByEvent(receivedMessage);
                     }, ()=>{
 
                     });
                 }else if(ownPinnedMessage){
+                    wfc.updatePinMessageStatusByEvent(receivedMessage);
                     wfc.updatePinMessageStatusByEvent(ownPinnedMessage);
                 }else{
                     wfc.updatePinMessageStatusByEvent(receivedMessage);
@@ -471,9 +454,15 @@ let store = {
             
         }
         else{
-            // if(!msgContentExtraObj.isPinned){
-            //     receivedMessage.messageContent.extra = JSON.stringify({isPinned: false, isUpdated: false});                
-            // }
+            debugger
+            if(msgContentExtraObj.isPinned){
+                let pinnedMsgsArr = this.getAllPinnedMessagesExcept(stringValue(receivedMessage.messageUid))
+                pinnedMsgsArr.forEach(msg => {
+                    msg.messageContent.extra = JSON.stringify({isPinned: false, isUpdated: false});                
+                    wfc.updatePinMessageStatusByEvent(msg);
+                });           
+            }
+
             wfc.updatePinMessageStatusByEvent(receivedMessage);
         }
     },
@@ -483,20 +472,14 @@ let store = {
         if(msgContentExtraObj.isPinned){
             setTimeout(() => {
                 let ownPinnedMessage = this.getOwnPinnedMessageExcept(stringValue(newMessage.messageUid)); 
-                console.log("ownPinnedMessage", ownPinnedMessage)
-                debugger
                 if(ownPinnedMessage && stringValue(newMessage.messageUid) !== stringValue(ownPinnedMessage.messageUid)){
                     ownPinnedMessage.messageContent.extra = JSON.stringify({isPinned: false, isUpdated: false});
                     wfc.pinUnpinMessage(ownPinnedMessage, ()=>{
-                        console.log("BACKKKKK", ownPinnedMessage, newMessage)
                         callback();
                     }, ()=>{
-                        console.log("BACKKKKK", ownPinnedMessage, newMessage)
-                        console.log("BACKKKKK FORCED ERROR")
                         callback();
                     });
                 }else{
-                    console.log("BACKKKKK else", ownPinnedMessage, newMessage)
                     callback();
                 }
             }, 10);
@@ -514,7 +497,6 @@ let store = {
             if(msg.direction == 0 && msg.messageContent && msg.messageContent.extra){
                 if(JSON.parse(msg.messageContent.extra).isPinned){
                     ownedMsg = msg;
-                    console.log(msg.messageId, ownedMsg);
                 }
             }
         }
@@ -527,11 +509,34 @@ let store = {
             if(msg.direction == 0 && stringValue(msg.messageUid) !== messageUid && msg.messageContent.extra){
                 if(JSON.parse(msg.messageContent.extra).isPinned){
                     ownedMsg = msg;
-                    console.log(stringValue(msg.messageUid), ownedMsg);
                 }
             }
         }
         return ownedMsg;
+    },
+    getAllPinnedMessages(){
+        let ownMsgs = [];
+        for(let i=0;i < conversationState.currentConversationMessageList.length; i++){
+            let msg = conversationState.currentConversationMessageList[i];
+            if(JSON.parse(msg.messageContent.extra).isPinned){
+                ownMsgs.push(msg);
+            }
+        }
+        debugger
+        return ownMsgs;
+    },
+    getAllPinnedMessagesExcept(messageUid){
+        let ownMsgs = [];
+        for(let i=0;i < conversationState.currentConversationMessageList.length; i++){
+            let msg = conversationState.currentConversationMessageList[i];
+            if(stringValue(msg.messageUid) !== messageUid && msg.messageContent.extra){
+                if(JSON.parse(msg.messageContent.extra).isPinned){
+                    ownMsgs.push(msg);
+                }
+            }
+        }
+        debugger
+        return ownMsgs;
     },
     _loadDefaultData() {
         this._loadFavGroupList();
