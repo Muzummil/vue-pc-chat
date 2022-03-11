@@ -586,6 +586,7 @@ export default {
         },
 
         delMessage(message) {
+            this.unpinMessage(message)
             wfc.deleteMessage(message.messageId);
         },
 
