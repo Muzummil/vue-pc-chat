@@ -429,11 +429,9 @@ let store = {
             return;
         }
         let msgContentExtraObj = JSON.parse(receivedMessage.messageContent.extra);
-        debugger
         if(receivedMessage.direction == 1){
             setTimeout(() => {
                 let ownPinnedMessage = this.getOwnPinnedMessage();
-                debugger
                 if(ownPinnedMessage && msgContentExtraObj.isPinned && stringValue(receivedMessage.messageUid) !== stringValue(ownPinnedMessage.messageUid)){
                     ownPinnedMessage.messageContent.extra = JSON.stringify({isPinned: false, isUpdated: false});
                     wfc.pinUnpinMessage(ownPinnedMessage, ()=>{
@@ -454,7 +452,6 @@ let store = {
             
         }
         else{
-            debugger
             if(msgContentExtraObj.isPinned){
                 let pinnedMsgsArr = this.getAllPinnedMessagesExcept(stringValue(receivedMessage.messageUid))
                 pinnedMsgsArr.forEach(msg => {
