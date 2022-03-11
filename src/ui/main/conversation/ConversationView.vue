@@ -525,15 +525,10 @@ export default {
             this.updateMsgPinStatus(message);
         },
         pinUnpin(message){
-            console.log("START", message);
-            debugger
             message = this.toggleMessageExtra(message);
             console.log("MSG22", stringValue(message.messageUid));
-            console.log("MSG", message);
-            debugger
             store.updatePinnedStatusBeforeNewPinned(message, ()=>{
                 console.log("GOTIT", message)
-                debugger
                 this.updateMsgPinStatus(message);
             });
 
@@ -559,8 +554,6 @@ export default {
         },
         updateMsgPinStatus(message){
             wfc.pinUnpinMessage(message, ()=>{
-                debugger
-                console.log("TRIGGERED");
                 this.$eventBus.$emit('pin-unpin-change', true);
             }, true);
         },
