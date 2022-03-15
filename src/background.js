@@ -422,6 +422,9 @@ function updateTray(unread = 0) {
             execBlink(unread > 0);
             // Avoid tray icon been recreate
             updateTray.lastUnread = unread;
+            if(unread > 0 && (mainWindow.isMinimized() || !mainWindow.isFocused())){
+                mainWindow.flashFrame(true);
+            }
         });
     } else {
         if (!tray) return;
