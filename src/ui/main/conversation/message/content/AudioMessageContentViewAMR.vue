@@ -78,22 +78,16 @@ export default {
                 console.log("Unsupported format for speech to text");
                 return;
             }
-            // const {app} = require('electron');
-            // console.log(app)
-            // let execPath;
-            // console.log(app.getPath('userData'));
-            // if(app.getPath ('exe')){
-            //     execPath = path.dirname (app.getPath ('exe'));
-            // }else{
-            //     execPath = path.dirname (process.execPath);
-            // }
-            // or
-            let dirName =  __dirname.replace("app.asar", remoteFileName);
-            // let dirName =  __dirname.split("Program Files")[0] + `/${remoteFileName}`;
-            console.log(dirName)
-            // console.log("BEFORE", path.join( __dirname.split("node_modules")[0], "src/assets/audio/" + remoteFileName))
-            const localSaveDirectoryPath = dirName.replace(/\\/g, "/");
-            // const localSaveDirectoryPath = path.join( __dirname.split("node_modules")[0], "src/assets/audio/" + remoteFileName).replace(/\\/g, "/");
+            let localSaveDirectoryPath = __dirname;
+            const isDevelopment = process.env.NODE_ENV !== 'production'
+            console.log("22222", process.env.NODE_ENV, isDevelopment, __dirname)
+            // const workingDir = isDevelopment ? `${__dirname}/public` : `${__dirname}`;
+            if(isDevelopment){
+                localSaveDirectoryPath = path.join( __dirname.split("node_modules")[0], "src/assets/audio/" + remoteFileName).replace(/\\/g, "/");
+            }else{
+                localSaveDirectoryPath = __dirname.replace("app.asar", remoteFileName).replace(/\\/g, "/");
+            }
+
             console.log("localSaveDirectoryPath", localSaveDirectoryPath)
             console.log("FILE", fs.existsSync(localSaveDirectoryPath), localSaveDirectoryPath)
             try {
@@ -150,15 +144,13 @@ export default {
         },
         
         playVoice() {
-            console.log("MSG", this.message)
+            console.log("MSG", this.message);
             this.$set(this.message, '_isPlaying', true);
             store.playVoice(this.message)
             this.convertSpeechToText();
         },
         downloadAndConvertFile(localSaveDirectoryPath ){
             this.downloadFile(this.message.content.remoteMediaUrl, localSaveDirectoryPath).then(res=>{
-                console.log("RES", res.path);
-                debugger
                 setTimeout(() => {
                     this.convertLocalFileToText(res.path);
                 }, 1000);
@@ -168,68 +160,36 @@ export default {
         },
 
         downloadFile(remoteFileUrl, localPath){
-            // this.test(remoteFileUrl, localPath);
             return new Promise(function(resolve, reject){
                 let req = request({
                     method: 'GET',
                     uri: remoteFileUrl
                 });
 
-                debugger
                 let out = fs.createWriteStream(localPath);
                 out.on('finish', () => {
-                    console.log(`You have successfully created a ${filePath} copy. The new file name is ${fileCopyPath}.`);
+                    console.log(`You have successfully created a ${localPath} copy. `);
                 })
                 req.pipe(out);
                 resolve(out);
             });
         },
-        test(remoteFileUrl, localPath){
-            const inputStream = fs.createReadStream(remoteFileUrl)
-            const outputStream = fs.createWriteStream(localPath)
-
-            inputStream.pipe(outputStream)
-            
-            outputStream.on('finish', () => {
-                console.log(`You have successfully created a ${localPath} copy.`);
-            })
-        },
         convertLocalFileToText(localFilePath){
             try{
                 let lastRecognized = '';
-                debugger
-                console.log("GFS", localFilePath, fs.readFileSync(localFilePath))
                 let audioConfig = sdk.AudioConfig.fromWavFileInput(fs.readFileSync(localFilePath));
-                console.log("audioConfig", audioConfig)
-
                 let autoDetectSourceLanguageConfig = sdk.AutoDetectSourceLanguageConfig.fromLanguages(["en-US", "zh-HK","zh-CN","zh-TW"]);
-                
-                // let speechRecognizer = new sdk.SpeechRecognizer(speechConfig,  ["en-US", "zh-HK","zh-CN","zh-TW"], audioConfig);
                 let speechRecognizer = sdk.SpeechRecognizer.FromConfig(speechConfig, autoDetectSourceLanguageConfig, audioConfig);
-                console.log("localFilePath", localFilePath, autoDetectSourceLanguageConfig);
-
                 speechRecognizer.startContinuousRecognitionAsync();
                 speechRecognizer.recognizing = (s, e) => {
                     this.$set(this.message, 'speechText', lastRecognized + e.result.text);
-                    console.log(`TRANSLATING: Text=${e.result.text}`);
-                    // this.message.speechText = e.result.text;
                 };
                 speechRecognizer.recognized = (s, e) => {
                     let resultText = '';
                     resultText = e.result.text;
-                    
                     lastRecognized += resultText + ' ';
                     speechout.innerHTML = lastRecognized;
-
-                    console.log("ENDED", e.result.text) 
                     this.$set(this.message, 'speechText', lastRecognized);
-
-                    // if (e.result.reason == ResultReason.RecognizedSpeech) {
-                    //     console.log(`TRANSLATED: Text=${e.result.text}`);
-                    // }
-                    // else if (e.result.reason == ResultReason.NoMatch) {
-                    //     console.log("NOMATCH: Speech could not be translated.");
-                    // }
                 };
                 speechRecognizer.canceled = (s, e) => {
                     console.log(`CANCELED: Reason=${e.reason}`);
@@ -245,33 +205,7 @@ export default {
                     console.log("\n    Session stopped event.");
                     speechRecognizer.stopContinuousRecognitionAsync();
                 };
-                
-
-                
-                // speechRecognizer.recognizeOnceAsync(result => {
-                //     console.log("SPEECH", result)
-                //     switch (result.reason) {
-                //         case sdk.ResultReason.RecognizedSpeech:
-                //             console.log(`RECOGNIZED: Text=${result.text}`);
-                //             break;
-                //         case sdk.ResultReason.NoMatch:
-                //             console.log("NOMATCH: Speech could not be recognized.");
-                //             break;
-                //         case sdk.ResultReason.Canceled:
-                //             const cancellation = CancellationDetails.fromResult(result);
-                //             console.log(`CANCELED: Reason=${cancellation.reason}`);
-
-                //             if (cancellation.reason == sdk.CancellationReason.Error) {
-                //                 console.log(`CANCELED: ErrorCode=${cancellation.ErrorCode}`);
-                //                 console.log(`CANCELED: ErrorDetails=${cancellation.errorDetails}`);
-                //                 console.log("CANCELED: Did you update the key and location/region info?");
-                //             }
-                //             break;
-                //     }    
-                //     speechRecognizer.close();
-                // });
             }catch(e){}
-            
         },
 
     },

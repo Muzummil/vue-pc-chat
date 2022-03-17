@@ -192,7 +192,6 @@ let store = {
                 this._loadDefaultConversationList();
             }
             if (conversationState.currentConversationInfo && msg.conversation.equal(conversationState.currentConversationInfo.conversation)) {
-                debugger
                 console.log("RECEIVE", msg)
                 try{
                     if (msg.messageContent instanceof DismissGroupNotification
@@ -256,7 +255,6 @@ let store = {
             if (msg.conversation.type !== 2 && miscState.isPageHidden && (miscState.enableNotification || msg.status === MessageStatus.AllMentioned || msg.status === MessageStatus.Mentioned)) {
                 this.notify(msg);
             }
-            debugger
             this.updateTray();
         });
 
@@ -287,6 +285,7 @@ let store = {
             this._loadDefaultConversationList();
             if (conversationState.currentConversationInfo) {
                 let msg = wfc.getMessageByUid(messageUid);
+                this.unpinMessageByUid(messageUid);
                 if (msg && msg.conversation.equal(conversationState.currentConversationInfo.conversation)) {
                     if (conversationState.currentConversationMessageList) {
                         conversationState.currentConversationMessageList = conversationState.currentConversationMessageList.filter(msg => !eq(msg.messageUid, messageUid))
@@ -320,10 +319,7 @@ let store = {
             this._loadDefaultConversationList();
             if (conversationState.currentConversationInfo) {
                 if (conversationState.currentConversationMessageList) {
-                    let msgIndex = conversationState.currentConversationMessageList.findIndex(msg=>  stringValue(msg.messageUid) === messageUid);
-                    let pinnedMessageLocal = conversationState.currentConversationMessageList.filter(msg => stringValue(msg.messageUid) === messageUid)[0]
-                    pinnedMessageLocal.messageContent.extra = JSON.stringify({ isPinned: false, isUpdated: false});
-                    conversationState.currentConversationMessageList[msgIndex] = pinnedMessageLocal;
+                    this.unpinMessageByUid(messageUid);
                 }
             }
         });
@@ -423,8 +419,14 @@ let store = {
         window.__wfc = wfc;
     },
 
+    unpinMessageByUid(messageUid){
+        let msgIndex = conversationState.currentConversationMessageList.findIndex(msg=>  stringValue(msg.messageUid) === messageUid);
+        let pinnedMessageLocal = conversationState.currentConversationMessageList.filter(msg => stringValue(msg.messageUid) === messageUid)[0]
+        pinnedMessageLocal.messageContent.extra = JSON.stringify({ isPinned: false, isUpdated: false});
+        conversationState.currentConversationMessageList[msgIndex] = pinnedMessageLocal;
+    },
+
     changePinStatus(receivedMessage){
-        debugger
         if(!JSON.parse(receivedMessage.messageContent.extra).isUpdated){
             return;
         }
@@ -519,7 +521,6 @@ let store = {
                 ownMsgs.push(msg);
             }
         }
-        debugger
         return ownMsgs;
     },
     getAllPinnedMessagesExcept(messageUid){
@@ -532,7 +533,6 @@ let store = {
                 }
             }
         }
-        debugger
         return ownMsgs;
     },
     _loadDefaultData() {
