@@ -238,15 +238,12 @@ export default {
         });
 
         this.$eventBus.$on('pin-unpin-change', args=> {
-            console.log("EVENT")
             this.resetPinnedMessages();
         })
         wfc.eventEmitter.on(EventType.PinMessage, () => {
-            console.log("EVENT222")
             this.resetPinnedMessages();
         });
         wfc.eventEmitter.on(EventType.UnpinMessage, () => {
-            console.log("EVENT3333")
             this.resetPinnedMessages();
         });
     },
@@ -424,7 +421,6 @@ export default {
         isPinned(message) {
             let msgExtra = message.messageContent.extra; 
             let isPinned = false;
-            console.log(msgExtra)
             if(!msgExtra || msgExtra == ''){
                 return false;
             }
@@ -435,7 +431,6 @@ export default {
             }else{
                 isPinned = false;
             }
-            console.log("isPinned", isPinned)
             return isPinned;
         },
         isDownloadAble(message) {
@@ -516,7 +511,6 @@ export default {
             }
         },
         unpinMessage(message){
-            console.log("UNPIN")
             let unpinExtra = {
                 "isPinned": false,
                 "isUpdated": false
@@ -526,15 +520,12 @@ export default {
         },
         pinUnpin(message){
             message = this.toggleMessageExtra(message);
-            console.log("MSG22", stringValue(message.messageUid));
             store.updatePinnedStatusBeforeNewPinned(message, ()=>{
-                console.log("GOTIT", message)
                 this.updateMsgPinStatus(message);
             });
 
         },
         toggleMessageExtra(message){
-            console.log("BEFORE TOGGLE", JSON.stringify(message))
             let msgExtra = message.messageContent ? message.messageContent.extra : null;
             let msgOverriddenExtra;
             if(msgExtra && msgExtra !== ''){
@@ -549,7 +540,6 @@ export default {
                 }
             }
             message.messageContent.extra = JSON.stringify(msgOverriddenExtra);
-            console.log("AFTER TOGGLE", JSON.stringify(message))
             return message;
         },
         updateMsgPinStatus(message){
@@ -789,13 +779,10 @@ export default {
         resetPinnedMessages(){
             let pinnedMessage = this.sharedConversationState.currentConversationMessageList.filter(message=>  {
                 if(message.content.extra && JSON.parse(message.content.extra).isPinned){
-                    console.log("EX", JSON.parse(message.content.extra))
                     return message
                 }
 
             })[0];
-            console.log("pinnedMessages",pinnedMessage)
-            // this.pinnedMessage = pinnedMessage;
             this.$set(this, "pinnedMessage", pinnedMessage)
             setTimeout(() => {
                 this.getMessages();
@@ -805,7 +792,6 @@ export default {
             }, 1000);
         },
         getMessages(){
-            console.log("END", this.sharedConversationState.currentConversationMessageList)
                 let pinnedMessage = {};
                  for(let i=0;i < this.sharedConversationState.currentConversationMessageList.length; i++){
                     let msg = this.sharedConversationState.currentConversationMessageList[i];
@@ -818,36 +804,7 @@ export default {
                         }
                     }
                 }
-
-                // for(let i=0; i < this.sharedConversationState.currentConversationMessageList.length; i++){
-                //     let message = this.sharedConversationState.currentConversationMessageList[i];
-                //     // message.content.extra = JSON.stringify(message.content.extra);
-                //     let parsedExtra;
-                //     try{
-                //         parsedExtra = JSON.parse(message.messageContent.extra);
-                //     }catch(e){
-                //         console.log(e);
-                //     }
-                //     setTimeout(() => {
-                //         console.log("CCCCCCC", message, message.messageContent.extra, parsedExtra['isPinned'])
-                //         if(parsedExtra && parsedExtra['isPinned']){
-                //             console.log("EX", parsedExtra)
-                //             pinnedMessage = message;
-                //             return;
-                //         }    
-                //     }, 100);
-                    
-                // }
-                // let pinnedMessage = this.sharedConversationState.currentConversationMessageList.filter(message=>  {
-                //     console.log("CCCCCCC", message.content.extra, JSON.parse(message.content.extra)['isPinned'])
-                //     if(message.content.extra && message.content.extra !== ''){
-                //         console.log("EX", JSON.parse(message.content.extra))
-                //         return message
-                //     }
-
-                // });
                 this.$set(this, "pinnedMessage", pinnedMessage)
-                console.log("pinnedMessages",pinnedMessage)
                 return pinnedMessage;
         },
          getUniqueListBy(arr, key = 'messageUid') {
@@ -864,11 +821,6 @@ export default {
                 }
             }
             return ret;
-            // if(message.messageContent && message.messageContent.extra){
-            //     return JSON.parse(message.messageContent.extra).isPinned ? true : false;
-            // }
-
-            // return false;
         }
     },
 
@@ -931,7 +883,6 @@ export default {
     },
 
     beforeUpdate(){
-        console.log("BEFORE UPDATE", this.sharedConversationState.forceScrollToBottom)
         if(this.sharedConversationState.forceScrollToBottom){
             this.scrollToBottom();
         }
@@ -958,8 +909,6 @@ export default {
             this.showConversationInfo = false;
         }
         this.conversationInfo = this.sharedConversationState.currentConversationInfo;
-        // this.sharedConversationState.forceScrollToBottom = false;
-        console.log("conversationInfo", this.conversationInfo)
     },    
 
     computed: {
@@ -987,8 +936,6 @@ export default {
         },
         getPinnedMessage: {
             get(){
-                
-                // this.pinnedMessage = pinnedMessage;
                 return this.getMessages();
             }
         }
