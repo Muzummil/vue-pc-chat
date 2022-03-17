@@ -1,19 +1,12 @@
 <template>
     <div>
         <div ref="container" class="audio-message-container" :style="widthStyle" @click="playVoice">
-            <!--    <i class="icon-ion-android-volume-up"></i>-->
-            <!--    <span> {{ duration }} </span>-->
-
-            <!--        <audio preload="auto" controls controlsList="nodownload">-->
-            <!--            <source :src="remotePath" type="audio/mp4"/>-->
-            <!--        </audio>-->
 
             <p v-if="message.direction === 0" class="duration">{{ duration }}"</p>
             <div class="volume-container">
                 <i v-show="!message._isPlaying" class="icon-ion-android-volume-up"></i>
                 <ScaleLoader v-show="message._isPlaying" :color="'#d2d2d2'" :height="'15px'" :width="'3px'"/>
             </div>
-            <!--        <div class="dot"></div>-->
             <p v-if="message.direction === 1" class="duration">{{ duration }}"</p>
         </div>
         <!-- Start Speech Text -->
@@ -32,10 +25,6 @@ import Message from "@/wfc/messages/message";
 import Config from "@/config";
 import ScaleLoader from 'vue-spinner/src/ScaleLoader'
 import store from "../../../../../store";
-import {
-    app
-} from 'electron';
-
 const fs = require('fs');
 const path = require('path');
 const sdk = require("microsoft-cognitiveservices-speech-sdk");
@@ -72,7 +61,6 @@ export default {
             return url.substring(url.lastIndexOf('/') + 1);
         },
         convertSpeechToText(){
-            console.log(this.message.content.remoteMediaUrl)
             const remoteFileName = this.getFilenameFromUrl(this.message.content.remoteMediaUrl);
             if(!remoteFileName.includes('.wav')){
                 console.log("Unsupported format for speech to text");
@@ -80,8 +68,6 @@ export default {
             }
             let localSaveDirectoryPath = __dirname;
             const isDevelopment = process.env.NODE_ENV !== 'production'
-            console.log("22222", process.env.NODE_ENV, isDevelopment, __dirname)
-            // const workingDir = isDevelopment ? `${__dirname}/public` : `${__dirname}`;
             if(isDevelopment){
                 localSaveDirectoryPath = path.join( __dirname.split("node_modules")[0], "src/assets/audio/" + remoteFileName).replace(/\\/g, "/");
             }else{
@@ -144,7 +130,6 @@ export default {
         },
         
         playVoice() {
-            console.log("MSG", this.message);
             this.$set(this.message, '_isPlaying', true);
             store.playVoice(this.message)
             this.convertSpeechToText();
@@ -233,7 +218,6 @@ export default {
             return seconds;
         },
         speechTextContent(){
-            console.log("VBBBB", this.message.speechText)
             return this.message.speechText;
         }
     },
