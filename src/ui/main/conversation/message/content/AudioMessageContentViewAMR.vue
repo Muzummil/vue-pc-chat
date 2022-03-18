@@ -60,8 +60,8 @@ export default {
         getFilenameFromUrl(url){
             return url.substring(url.lastIndexOf('/') + 1);
         },
-        convertSpeechToText(){
-            const remoteFileName = this.getFilenameFromUrl(this.message.content.remoteMediaUrl);
+        convertSpeechToText(speechMessage){
+            const remoteFileName = this.getFilenameFromUrl(speechMessage.content.remoteMediaUrl);
             if(!remoteFileName.includes('.wav')){
                 console.log("Unsupported format for speech to text");
                 return;
@@ -69,7 +69,7 @@ export default {
             let localSaveDirectoryPath = __dirname;
             const isDevelopment = process.env.NODE_ENV !== 'production'
             if(isDevelopment){
-                localSaveDirectoryPath = path.join( __dirname.split("node_modules")[0], "src/assets/audio/" + remoteFileName).replace(/\\/g, "/");
+                localSaveDirectoryPath = path.join( __dirname.split("node_modules")[0], "src/assets/" + remoteFileName).replace(/\\/g, "/");
             }else{
                 localSaveDirectoryPath = __dirname.replace("app.asar", remoteFileName).replace(/\\/g, "/");
             }
@@ -132,7 +132,7 @@ export default {
         playVoice() {
             this.$set(this.message, '_isPlaying', true);
             store.playVoice(this.message)
-            this.convertSpeechToText();
+            this.convertSpeechToText(this.message);
         },
         downloadAndConvertFile(localSaveDirectoryPath ){
             this.downloadFile(this.message.content.remoteMediaUrl, localSaveDirectoryPath).then(res=>{
@@ -221,6 +221,15 @@ export default {
             return this.message.speechText;
         }
     },
+    // updated(){
+    //     this.$eventBus.$on('start-speech-text', args=> {
+    //         console.log("INIT", args)
+    //         if(args){
+    //             this.message = args
+    //             this.convertSpeechToText(this.message);
+    //         }
+    //     })
+    // },
     components: {
         ScaleLoader
     }
@@ -254,6 +263,7 @@ export default {
     border-radius: 5px;
     padding: 5px 10px;
     align-items: center;
+    margin-right: 13px;
 }
 
 .volume-container i {

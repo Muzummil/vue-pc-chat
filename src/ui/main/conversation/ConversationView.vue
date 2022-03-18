@@ -60,6 +60,7 @@
                         <li v-for="(message) in sharedConversationState.currentConversationMessageList"
                             :key="message.messageId" :id="message.messageId">
                             <template v-if="message.messageId > 0">
+                                <!-- {{message.messageId}} AAA -->
                                 <!--todo 不同的消息类型 notification in out-->
                                 <NotificationMessageContentView :message="message" v-if="isNotificationMessage(message)"/>
                                 <NormalOutMessageContentView
@@ -116,6 +117,9 @@
                     <li v-if="isPinable(message) && isPinned(message)">
                         <a @click.prevent="unpinMessage(message)"> {{ $t('common.pin_msg') }}</a>
                     </li>
+                    <!-- <li v-if="isAudioMessage(message)">
+                        <a @click.prevent="convertSpeechToText(message)">{{ $t('common.speechToText') }}</a>
+                    </li> -->
                     <li v-if="isCopyable(message)">
                         <a @click.prevent="copy(message)">{{ $t('common.copy') }}</a>
                     </li>
@@ -418,6 +422,9 @@ export default {
         isPinable(message) {
             return message && (message.messageContent instanceof TextMessageContent) && message.direction == 0;
         },
+        isAudioMessage(message) {
+            return message && message.messageContent.type === 2 ;
+        },
         isPinned(message) {
             let msgExtra = message.messageContent.extra; 
             let isPinned = false;
@@ -517,6 +524,11 @@ export default {
             }
             message.messageContent.extra = JSON.stringify(unpinExtra);
             this.updateMsgPinStatus(message);
+        },
+        convertSpeechToText(message){
+            console.log("EMIT22")
+            this.$eventBus.$emit('start-speech-text', message);
+            // this.sharedConversationState.currentVoiceMessage = message;
         },
         pinUnpin(message){
             message = this.toggleMessageExtra(message);
@@ -1180,9 +1192,9 @@ export default {
 .pin-icon-container {
     display: flex;
     justify-content: flex-end;
-    padding: 0px 50px;
+    padding: 0px 67px;
     align-items: center;
-    margin-top: -22px;
+    margin-top: -6px;
 }
 .pin-icon-container.in-msg-icon-start {
     justify-content: flex-start !important;
