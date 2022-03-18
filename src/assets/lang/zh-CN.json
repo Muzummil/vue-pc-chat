@@ -172,7 +172,8 @@
         "nameSearch": "搜索昵称",
         "reject": "拒绝",
         "reason": "打招呼",
-        "pin_msg": "固定消息"
+        "pin_msg": "固定消息",
+        "speechToText": "转文字"
     },
     "misc":{
         "beijing": "北京",
