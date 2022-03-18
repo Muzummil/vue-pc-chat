@@ -219,17 +219,20 @@ export default {
         },
         speechTextContent(){
             return this.message.speechText;
-        }
+        },
+        // currentVoiceMessage(){
+        //     // console.log("COMP",store.state.conversation.currentVoiceMessage)
+        //     return store.state.conversation.currentVoiceMessage;
+        // }
     },
-    // updated(){
-    //     this.$eventBus.$on('start-speech-text', args=> {
-    //         console.log("INIT", args)
-    //         if(args){
-    //             this.message = args
-    //             this.convertSpeechToText(this.message);
-    //         }
-    //     })
-    // },
+    watch:{
+        // currentVoiceMessage(newMessage, oldMessage){
+        //     if(newMessage){
+        //         // this.message = newMessage;
+        //         // this.convertSpeechToText(this.message);
+        //     }
+        // }
+    },
     components: {
         ScaleLoader
     }

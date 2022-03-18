@@ -747,6 +747,9 @@ let store = {
         }
         conversationState.currentVoiceMessage = message;
     },
+    setCurrentVoiceMsg(message){
+        conversationState.currentVoiceMessage = message;  
+    },
 
     /**
      *

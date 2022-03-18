@@ -118,7 +118,7 @@
                         <a @click.prevent="unpinMessage(message)"> {{ $t('common.pin_msg') }}</a>
                     </li>
                     <!-- <li v-if="isAudioMessage(message)">
-                        <a @click.prevent="convertSpeechToText(message)">{{ $t('common.speechToText') }}</a>
+                        <a @click.prevent="convertSpeechToText(message)">AA{{ $t('common.speechToText') }}</a>
                     </li> -->
                     <li v-if="isCopyable(message)">
                         <a @click.prevent="copy(message)">{{ $t('common.copy') }}</a>
@@ -526,9 +526,7 @@ export default {
             this.updateMsgPinStatus(message);
         },
         convertSpeechToText(message){
-            console.log("EMIT22")
-            this.$eventBus.$emit('start-speech-text', message);
-            // this.sharedConversationState.currentVoiceMessage = message;
+            store.setCurrentVoiceMsg(message)
         },
         pinUnpin(message){
             message = this.toggleMessageExtra(message);
