@@ -136,7 +136,6 @@ export default {
     activated() {
         store.setForceScrollToBottom(true);
         this.$eventBus.$on('scroll-conversation-list-top', () => {
-            console.log("IN EVN");
            this.scrollToUnreadConversation();
         });
     },
