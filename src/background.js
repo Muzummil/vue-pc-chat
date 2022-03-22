@@ -635,7 +635,7 @@ const createMainWindow = async () => {
         let count = args;
         //if (settings.showOnTray) {
         updateTray(count);
-        app.badgeCount = count;
+        // app.badgeCount = count;
         //}
     });
     app.on('remote-require', (event, args) => {
