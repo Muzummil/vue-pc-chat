@@ -83,10 +83,10 @@
                     <img @click="scrollToBottom" src="../../../assets/images/scroll-down.svg">
                     <!-- <i class="icon-ion-ios-arrow-round-down"></i> -->
                 </div>
-                <div v-if="sharedConversationState.inputtingUser" class="inputting-container">
+                <!-- <div v-if="sharedConversationState.inputtingUser" class="inputting-container">
                     <img class="avatar" :src="sharedConversationState.inputtingUser.portrait"/>
                     <ScaleLoader :color="'#d2d2d2'" :height="'15px'" :width="'3px'"/>
-                </div>
+                </div> -->
                 <div v-show="!sharedConversationState.enableMessageMultiSelection" v-on:mousedown="dragStart"
                      class="divider-handler"></div>
                 <MessageInputView :conversationInfo="sharedConversationState.currentConversationInfo"

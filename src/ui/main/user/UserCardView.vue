@@ -1,5 +1,5 @@
 <template>
-    <section @click.stop="" class="user-info-container">
+    <section v-if="userInfo" @click.stop="" class="user-info-container">
         <div class="header">
             <div class="desc">
                 <h2>{{ userInfo.displayName }}</h2>
@@ -65,7 +65,7 @@ export default {
     },
     data() {
         return {
-            displayName: this.userInfo.displayName
+            displayName: this.userInfo ? this.userInfo.displayName : ''
         }
     },
     methods: {

@@ -350,7 +350,7 @@ export default {
 }
 .status-tick-container{
     /* padding: 0px 25px; */
-    padding: 24px 5px 0px 0px;
+    margin: 24px 7px 0px -3px;
     width: 17px;
 }
 </style>
