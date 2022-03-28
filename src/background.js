@@ -540,8 +540,8 @@ const createMainWindow = async () => {
         icon
     });
     mainWindow.center();
-    const badgeOptions = {}
-    winBadge = new Badge(mainWindow, badgeOptions);
+    // const badgeOptions = {}
+    // winBadge = new Badge(mainWindow, badgeOptions);
 
     if (process.env.WEBPACK_DEV_SERVER_URL) {
         // Load the url of the dev server if in development mode
