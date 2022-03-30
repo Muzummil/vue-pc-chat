@@ -605,6 +605,22 @@ export default {
             this.moveCursorToEnd(input);
         },
 
+        setRecallMessageContent() {
+            this.$eventBus.$on('recall-message-content', (msg) => {
+                try{
+                    if(msg && msg.messageContent.originalSearchableContent){
+                        const messageContent = msg.messageContent.originalSearchableContent;
+                        let input = this.$refs['input'];
+                        if(input){
+                            // input.innerHTML = messageContent;
+                            input.innerHTML = messageContent.replace(/ /g, '&nbsp');
+                            this.moveCursorToEnd(input);
+                        }
+                    }
+                }catch(e){}          
+             });
+        },
+
         storeDraft(conversationInfo, quotedMessage) {
             let draftText = this.$refs['input'].innerText.trim();
             draftText = draftText
@@ -702,6 +718,7 @@ export default {
         this.storeDraftIntervalId = setInterval(() => {
             this.storeDraft(this.conversationInfo, this.quotedMessage);
         }, 5 * 1000)
+        this.setRecallMessageContent();
     },
 
     created() {

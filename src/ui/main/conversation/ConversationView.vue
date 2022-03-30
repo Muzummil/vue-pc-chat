@@ -6,7 +6,10 @@
         <div v-else class="conversation-container">
             <header>
                 <div class="title-container">
-                    <h1 class="single-line" @click.stop="toggleConversationInfo">{{ conversationTitle }}</h1>
+                    <div>
+                        <h1 class="single-line" @click.stop="toggleConversationInfo">{{ conversationTitle }}</h1>
+                        <p v-if="sharedConversationState.inputtingUser" class="typing-text">正在输入...</p>
+                    </div>
                     <a href="#"><i class="icon-ion-ios-settings-strong"
                                    style="display: inline-block"
                                    v-bind:style="{marginTop:sharedMiscState.isElectronWindowsOrLinux ?  '30px' : '0'}"
@@ -1202,5 +1205,10 @@ export default {
 }
 .text-section{
     cursor: pointer;
+}
+.typing-text{
+    font-size: 10px;
+    margin-top: 6px;
+    color: #b8b8b8;
 }
 </style>
