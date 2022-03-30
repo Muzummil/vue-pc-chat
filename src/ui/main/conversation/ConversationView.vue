@@ -8,7 +8,7 @@
                 <div class="title-container">
                     <div>
                         <h1 class="single-line" @click.stop="toggleConversationInfo">{{ conversationTitle }}</h1>
-                        <p v-if="sharedConversationState.inputtingUser" class="typing-text">Typing...</p>
+                        <p v-if="sharedConversationState.inputtingUser" class="typing-text">正在输入...</p>
                     </div>
                     <a href="#"><i class="icon-ion-ios-settings-strong"
                                    style="display: inline-block"

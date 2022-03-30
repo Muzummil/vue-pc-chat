@@ -208,14 +208,13 @@ let store = {
                         userInfo = Object.assign({}, userInfo);
                         userInfo._displayName = wfc.getGroupMemberDisplayNameEx(userInfo);
                         conversationState.inputtingUser = userInfo;
-    
                         if (!conversationState.inputClearHandler) {
                             conversationState.inputClearHandler = () => {
                                 conversationState.inputtingUser = null;
                             }
                         }
                         clearTimeout(conversationState.inputClearHandler);
-                        setTimeout(conversationState.inputClearHandler, 3000)
+                        setTimeout(conversationState.inputClearHandler, 6000)
                     } else {
                         clearTimeout(conversationState.inputClearHandler);
                         conversationState.inputtingUser = null;
