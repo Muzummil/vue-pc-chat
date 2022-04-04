@@ -173,7 +173,8 @@
         "reject": "拒绝",
         "reason": "打招呼",
         "pin_msg": "固定消息",
-        "speechToText": "转文字"
+        "speechToText": "转文字",
+        "readd": "重新编辑"
     },
     "misc":{
         "beijing": "北京",

@@ -1,7 +1,7 @@
 <template>
     <div class="notification-container">
         <p class="notification">{{ message.messageContent.digest(message) }} 
-            <span @click="setMessage" v-if="isMessageCanBeRecalled(message)"> 一 <a class="recall-again"> {{ $t('common.recall') }} </a> </span>
+            <span @click="setMessage" v-if="isMessageCanBeRecalled(message)"> 一 <a class="recall-again"> {{ $t('common.readd') }} </a> </span>
         </p>
     </div>
 </template>

@@ -27,9 +27,6 @@
                         conversationInfo && conversationInfo.isSilent ? $t('conversation.enable_notification') : $t('conversation.disable_notification')
                     }}</a>
             </li>
-            <li>
-                <a @click.prevent="removeConversation(conversationInfo)">{{ $t('common.delete') }}</a>
-            </li>
             <li v-show="conversationInfo
                 && (!sharedConversationState.currentConversationInfo || !sharedConversationState.currentConversationInfo.conversation.equal(conversationInfo.conversation))
                 && conversationInfo._unread === 0"
@@ -41,6 +38,9 @@
                 && conversationInfo._unread > 0"
                 @click.prevent="clearConversationUnreadStatus(conversationInfo.conversation)">
                 <a>{{ $t('conversation.mark_as_read') }}</a>
+            </li>
+            <li>
+                <a @click.prevent="removeConversation(conversationInfo)">{{ $t('common.delete') }}</a>
             </li>
         </vue-context>
     </section>

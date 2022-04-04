@@ -129,9 +129,6 @@
                     <li v-if="isDownloadAble(message)">
                         <a @click.prevent="download(message)">{{ $t('common.save') }}</a>
                     </li>
-                    <li>
-                        <a @click.prevent="delMessage(message)">{{ $t('common.delete') }}</a>
-                    </li>
                     <li v-if="isForwardable(message)">
                         <a @click.prevent="_forward(message)">{{ $t('common.forward') }}</a>
                     </li>
@@ -152,6 +149,9 @@
                     </li>
                     <li v-if="isLocalFile(message)">
                         <a @click.prevent="openDir(message)">{{ $t('common.open_dir') }}</a>
+                    </li>
+                    <li>
+                        <a @click.prevent="delMessage(message)">{{ $t('common.delete') }}</a>
                     </li>
                 </vue-context>
                 <vue-context ref="messageSenderContextMenu" v-slot="{data: message}" :close-on-scroll="true" v-on:close="onMessageSenderContextMenuClose">
