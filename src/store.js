@@ -1686,6 +1686,8 @@ let store = {
     deleteFriend(target) {
         wfc.deleteFriend(target, () => {
             wfc.removeConversation(new Conversation(ConversationType.Single, target, 0), true);
+            console.log("TRRR",target, contactState)
+            contactState.currentFriend = null;
             this._loadDefaultConversationList();
         }, (err) => {
             console.log('deleteFriend error', err);
