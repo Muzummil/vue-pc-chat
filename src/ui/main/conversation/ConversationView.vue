@@ -6,7 +6,10 @@
         <div v-else class="conversation-container">
             <header>
                 <div class="title-container">
-                    <h1 class="single-line" @click.stop="toggleConversationInfo">{{ conversationTitle }}</h1>
+                    <div>
+                        <h1 class="single-line" @click.stop="toggleConversationInfo">{{ conversationTitle }}</h1>
+                        <p v-if="sharedConversationState.inputtingUser" class="typing-text">正在输入...</p>
+                    </div>
                     <a href="#"><i class="icon-ion-ios-settings-strong"
                                    style="display: inline-block"
                                    v-bind:style="{marginTop:sharedMiscState.isElectronWindowsOrLinux ?  '30px' : '0'}"
@@ -24,7 +27,7 @@
                 <!-- Start Pin/Unpin Message -->
                 <div v-if="(getPinnedMessage && getPinnedMessage.content) || (pinnedMessage && pinnedMessage.content)" class="pin-messages-container">
                     <div class="flex-row justify-content-between flex-align-center">
-                        <div class="text-section flex-row relative flex-align-center">
+                        <div @click.prevent="scrollToPinnedMessage(pinnedMessage)" class="text-section flex-row relative flex-align-center">
                             <div class="pin-line"></div>
                             <div class="pinned-message-content">
                                 <div class="flex-column">
@@ -58,8 +61,9 @@
                     </infinite-loading>
                     <ul>
                         <li v-for="(message) in sharedConversationState.currentConversationMessageList"
-                            :key="message.messageId">
+                            :key="message.messageId" :id="message.messageId">
                             <template v-if="message.messageId > 0">
+                                <!-- {{message.messageId}} AAA -->
                                 <!--todo 不同的消息类型 notification in out-->
                                 <NotificationMessageContentView :message="message" v-if="isNotificationMessage(message)"/>
                                 <NormalOutMessageContentView
@@ -82,10 +86,10 @@
                     <img @click="scrollToBottom" src="../../../assets/images/scroll-down.svg">
                     <!-- <i class="icon-ion-ios-arrow-round-down"></i> -->
                 </div>
-                <div v-if="sharedConversationState.inputtingUser" class="inputting-container">
+                <!-- <div v-if="sharedConversationState.inputtingUser" class="inputting-container">
                     <img class="avatar" :src="sharedConversationState.inputtingUser.portrait"/>
                     <ScaleLoader :color="'#d2d2d2'" :height="'15px'" :width="'3px'"/>
-                </div>
+                </div> -->
                 <div v-show="!sharedConversationState.enableMessageMultiSelection" v-on:mousedown="dragStart"
                      class="divider-handler"></div>
                 <MessageInputView :conversationInfo="sharedConversationState.currentConversationInfo"
@@ -116,14 +120,14 @@
                     <li v-if="isPinable(message) && isPinned(message)">
                         <a @click.prevent="unpinMessage(message)"> {{ $t('common.pin_msg') }}</a>
                     </li>
+                    <!-- <li v-if="isAudioMessage(message)">
+                        <a @click.prevent="convertSpeechToText(message)">AA{{ $t('common.speechToText') }}</a>
+                    </li> -->
                     <li v-if="isCopyable(message)">
                         <a @click.prevent="copy(message)">{{ $t('common.copy') }}</a>
                     </li>
                     <li v-if="isDownloadAble(message)">
                         <a @click.prevent="download(message)">{{ $t('common.save') }}</a>
-                    </li>
-                    <li>
-                        <a @click.prevent="delMessage(message)">{{ $t('common.delete') }}</a>
                     </li>
                     <li v-if="isForwardable(message)">
                         <a @click.prevent="_forward(message)">{{ $t('common.forward') }}</a>
@@ -145,6 +149,9 @@
                     </li>
                     <li v-if="isLocalFile(message)">
                         <a @click.prevent="openDir(message)">{{ $t('common.open_dir') }}</a>
+                    </li>
+                    <li>
+                        <a @click.prevent="delMessage(message)">{{ $t('common.delete') }}</a>
                     </li>
                 </vue-context>
                 <vue-context ref="messageSenderContextMenu" v-slot="{data: message}" :close-on-scroll="true" v-on:close="onMessageSenderContextMenuClose">
@@ -238,15 +245,12 @@ export default {
         });
 
         this.$eventBus.$on('pin-unpin-change', args=> {
-            console.log("EVENT")
             this.resetPinnedMessages();
         })
         wfc.eventEmitter.on(EventType.PinMessage, () => {
-            console.log("EVENT222")
             this.resetPinnedMessages();
         });
         wfc.eventEmitter.on(EventType.UnpinMessage, () => {
-            console.log("EVENT3333")
             this.resetPinnedMessages();
         });
     },
@@ -303,7 +307,12 @@ export default {
         toggleConversationInfo() {
             this.showConversationInfo = !this.showConversationInfo;
         },
-
+        scrollToPinnedMessage(pinnedMessage){
+            document.getElementById(pinnedMessage.messageId).scrollIntoView({
+                behavior: "smooth",
+                block: 'center'
+            });
+        },
         toggleMessageMultiSelectionActionView(message) {
             if (!this.sharedConversationState.enableMessageMultiSelection) {
                 this.saveMessageListViewFlexGrow = this.$refs['conversationMessageList'].style.flexGrow;
@@ -416,10 +425,12 @@ export default {
         isPinable(message) {
             return message && (message.messageContent instanceof TextMessageContent) && message.direction == 0;
         },
+        isAudioMessage(message) {
+            return message && message.messageContent.type === 2 ;
+        },
         isPinned(message) {
             let msgExtra = message.messageContent.extra; 
             let isPinned = false;
-            console.log(msgExtra)
             if(!msgExtra || msgExtra == ''){
                 return false;
             }
@@ -430,7 +441,6 @@ export default {
             }else{
                 isPinned = false;
             }
-            console.log("isPinned", isPinned)
             return isPinned;
         },
         isDownloadAble(message) {
@@ -511,7 +521,6 @@ export default {
             }
         },
         unpinMessage(message){
-            console.log("UNPIN")
             let unpinExtra = {
                 "isPinned": false,
                 "isUpdated": false
@@ -519,22 +528,17 @@ export default {
             message.messageContent.extra = JSON.stringify(unpinExtra);
             this.updateMsgPinStatus(message);
         },
+        convertSpeechToText(message){
+            store.setCurrentVoiceMsg(message)
+        },
         pinUnpin(message){
-            console.log("START", message);
-            debugger
             message = this.toggleMessageExtra(message);
-            console.log("MSG22", stringValue(message.messageUid));
-            console.log("MSG", message);
-            debugger
             store.updatePinnedStatusBeforeNewPinned(message, ()=>{
-                console.log("GOTIT", message)
-                debugger
                 this.updateMsgPinStatus(message);
             });
 
         },
         toggleMessageExtra(message){
-            console.log("BEFORE TOGGLE", JSON.stringify(message))
             let msgExtra = message.messageContent ? message.messageContent.extra : null;
             let msgOverriddenExtra;
             if(msgExtra && msgExtra !== ''){
@@ -549,13 +553,10 @@ export default {
                 }
             }
             message.messageContent.extra = JSON.stringify(msgOverriddenExtra);
-            console.log("AFTER TOGGLE", JSON.stringify(message))
             return message;
         },
         updateMsgPinStatus(message){
             wfc.pinUnpinMessage(message, ()=>{
-                debugger
-                console.log("TRIGGERED");
                 this.$eventBus.$emit('pin-unpin-change', true);
             }, true);
         },
@@ -588,6 +589,7 @@ export default {
         },
 
         delMessage(message) {
+            this.unpinMessage(message)
             wfc.deleteMessage(message.messageId);
         },
 
@@ -788,16 +790,12 @@ export default {
             this.$refs.messageInputView.mention(message.conversation.target, message.from);
         },
         resetPinnedMessages(){
-            console.log("DDD2222", this.sharedConversationState.currentConversationMessageList)
             let pinnedMessage = this.sharedConversationState.currentConversationMessageList.filter(message=>  {
                 if(message.content.extra && JSON.parse(message.content.extra).isPinned){
-                    console.log("EX", JSON.parse(message.content.extra))
                     return message
                 }
 
             })[0];
-            console.log("pinnedMessages",pinnedMessage)
-            // this.pinnedMessage = pinnedMessage;
             this.$set(this, "pinnedMessage", pinnedMessage)
             setTimeout(() => {
                 this.getMessages();
@@ -807,7 +805,6 @@ export default {
             }, 1000);
         },
         getMessages(){
-            console.log("END", this.sharedConversationState.currentConversationMessageList)
                 let pinnedMessage = {};
                  for(let i=0;i < this.sharedConversationState.currentConversationMessageList.length; i++){
                     let msg = this.sharedConversationState.currentConversationMessageList[i];
@@ -820,36 +817,7 @@ export default {
                         }
                     }
                 }
-
-                // for(let i=0; i < this.sharedConversationState.currentConversationMessageList.length; i++){
-                //     let message = this.sharedConversationState.currentConversationMessageList[i];
-                //     // message.content.extra = JSON.stringify(message.content.extra);
-                //     let parsedExtra;
-                //     try{
-                //         parsedExtra = JSON.parse(message.messageContent.extra);
-                //     }catch(e){
-                //         console.log(e);
-                //     }
-                //     setTimeout(() => {
-                //         console.log("CCCCCCC", message, message.messageContent.extra, parsedExtra['isPinned'])
-                //         if(parsedExtra && parsedExtra['isPinned']){
-                //             console.log("EX", parsedExtra)
-                //             pinnedMessage = message;
-                //             return;
-                //         }    
-                //     }, 100);
-                    
-                // }
-                // let pinnedMessage = this.sharedConversationState.currentConversationMessageList.filter(message=>  {
-                //     console.log("CCCCCCC", message.content.extra, JSON.parse(message.content.extra)['isPinned'])
-                //     if(message.content.extra && message.content.extra !== ''){
-                //         console.log("EX", JSON.parse(message.content.extra))
-                //         return message
-                //     }
-
-                // });
                 this.$set(this, "pinnedMessage", pinnedMessage)
-                console.log("pinnedMessages",pinnedMessage)
                 return pinnedMessage;
         },
          getUniqueListBy(arr, key = 'messageUid') {
@@ -866,11 +834,6 @@ export default {
                 }
             }
             return ret;
-            // if(message.messageContent && message.messageContent.extra){
-            //     return JSON.parse(message.messageContent.extra).isPinned ? true : false;
-            // }
-
-            // return false;
         }
     },
 
@@ -933,7 +896,6 @@ export default {
     },
 
     beforeUpdate(){
-        console.log("BEFORE UPDATE", this.sharedConversationState.forceScrollToBottom)
         if(this.sharedConversationState.forceScrollToBottom){
             this.scrollToBottom();
         }
@@ -960,8 +922,6 @@ export default {
             this.showConversationInfo = false;
         }
         this.conversationInfo = this.sharedConversationState.currentConversationInfo;
-        // this.sharedConversationState.forceScrollToBottom = false;
-        console.log("conversationInfo", this.conversationInfo)
     },    
 
     computed: {
@@ -989,8 +949,6 @@ export default {
         },
         getPinnedMessage: {
             get(){
-                
-                // this.pinnedMessage = pinnedMessage;
                 return this.getMessages();
             }
         }
@@ -1235,14 +1193,22 @@ export default {
 .pin-icon-container {
     display: flex;
     justify-content: flex-end;
-    padding: 0px 50px;
+    padding: 0px 67px;
     align-items: center;
-    margin-top: -22px;
+    margin-top: -6px;
 }
 .pin-icon-container.in-msg-icon-start {
     justify-content: flex-start !important;
 }
 .pin-icon-container img{
     width: 15px
+}
+.text-section{
+    cursor: pointer;
+}
+.typing-text{
+    font-size: 10px;
+    margin-top: 6px;
+    color: #b8b8b8;
 }
 </style>

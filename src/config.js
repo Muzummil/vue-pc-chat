@@ -15,11 +15,11 @@ export default class Config {
     // 上线建议使用https，使用https更安全。
     //static APP_SERVER = 'http://app.wildfirechat.net:8888';
     // static APP_SERVER = 'https://app.wildfirechat.net';
-    static APP_SERVER = 'https://imapp.pandadb.net';
+    static APP_SERVER = 'https://devimapp.pandadb.net';
 
     // static QR_CODE_PREFIX_PC_SESSION = "wildfirechat://pcsession/";
     // turn server 配置，可以添加多个
-    static ICE_SERVERS = [{uri: 'turn:turn.prod.pandadb.net:3478', userName: 'wfchat', password: 'wfchat'}];
+    static ICE_SERVERS = [{uri: 'turn:turn.dev.pandadb.net:3478', userName: 'wfchat', password: 'wfchat'}];
 
     // static APP_SERVER = 'http://10.39.1.56:8888';
 

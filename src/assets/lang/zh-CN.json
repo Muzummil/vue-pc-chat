@@ -28,7 +28,8 @@
         "reqSent": "请求已发送",
         "reqAlreadySent": "已发送好友申请",
         "blacklistFriend": "加入黑名单",
-        "unBlacklistFriend": "取消黑名单"
+        "unBlacklistFriend": "取消黑名单",
+        "deleteFriend": "删除好友"
     },
     "group": {
         "name": "群名称{0}",
@@ -172,7 +173,9 @@
         "nameSearch": "搜索昵称",
         "reject": "拒绝",
         "reason": "打招呼",
-        "pin_msg": "固定消息"
+        "pin_msg": "固定消息",
+        "speechToText": "转文字",
+        "readd": "重新编辑"
     },
     "misc":{
         "beijing": "北京",

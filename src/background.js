@@ -422,6 +422,9 @@ function updateTray(unread = 0) {
             execBlink(unread > 0);
             // Avoid tray icon been recreate
             updateTray.lastUnread = unread;
+            if(unread > 0 && (mainWindow.isMinimized() || !mainWindow.isFocused())){
+                mainWindow.flashFrame(true);
+            }
         });
     } else {
         if (!tray) return;
@@ -537,8 +540,8 @@ const createMainWindow = async () => {
         icon
     });
     mainWindow.center();
-    const badgeOptions = {}
-    winBadge = new Badge(mainWindow, badgeOptions);
+    // const badgeOptions = {}
+    // winBadge = new Badge(mainWindow, badgeOptions);
 
     if (process.env.WEBPACK_DEV_SERVER_URL) {
         // Load the url of the dev server if in development mode
@@ -632,7 +635,7 @@ const createMainWindow = async () => {
         let count = args;
         //if (settings.showOnTray) {
         updateTray(count);
-        app.badgeCount = count;
+        // app.badgeCount = count;
         //}
     });
     app.on('remote-require', (event, args) => {

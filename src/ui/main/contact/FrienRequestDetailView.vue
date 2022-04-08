@@ -33,8 +33,8 @@
         </div>
         <div v-if="isFriend" class="footer">
             <a @click="this.chat">{{ $t('message.send_message') }}</a>
-            <a v-if="!isBlackListed" class="delete-friend" @click="changeFriendBlacklist(true)">{{ $t('friend_request.blacklistFriend') }}</a>
-            <a v-if="isBlackListed" class="delete-friend" @click="changeFriendBlacklist(false)">{{ $t('friend_request.unBlacklistFriend') }}</a>
+            <a class="delete-friend" @click="deleteFriend">{{ $t('friend_request.deleteFriend') }}</a>
+            <!-- <a v-if="isBlackListed" class="delete-friend" @click="changeFriendBlacklist(false)">{{ $t('friend_request.unBlacklistFriend') }}</a> -->
         </div>
     </section>
 </template>
@@ -63,6 +63,13 @@ export default {
         },
         changeFriendBlacklist(status){
             wfc.setBlackList(this.sharedStateContact.currentFriendRequest._target.uid, status, () => {
+                this.sharedStateContact.currentFriendRequest = null;
+            }, (error) => {
+                console.log(error)
+            });
+        },
+        deleteFriend(){
+            store.deleteFriend(this.sharedStateContact.currentFriendRequest._target.uid, () => {
                 this.sharedStateContact.currentFriendRequest = null;
             }, (error) => {
                 console.log(error)

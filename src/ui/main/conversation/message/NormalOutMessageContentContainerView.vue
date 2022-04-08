@@ -30,6 +30,11 @@
                                             :show-close-button="false"/>
                         </div>
                     </div>
+                    <div class="status-tick-container">
+                        <p>
+                            <img v-if="shouldShowMessageReceipt && message.status > 0" class="tick-icon" :src="messageStatusTickImgUrl" >
+                        </p>
+                    </div>
 
                     <tippy
                         :to="'infoTrigger' + this.message.messageId"
@@ -52,13 +57,7 @@
                          :src="message._from.portrait">
                 </div>
             </div>
-
-
-            <div class="status-tick-container">
-                <p v-if="shouldShowMessageReceipt && message.status > 0">
-                    <img class="tick-icon" :src="messageStatusTickImgUrl" >
-                </p>
-            </div>
+            
             
         </div>
     </section>
@@ -350,6 +349,8 @@ export default {
     width: 17px;
 }
 .status-tick-container{
-    padding: 0px 25px;
+    /* padding: 0px 25px; */
+    margin: 24px 7px 0px -3px;
+    width: 17px;
 }
 </style>
