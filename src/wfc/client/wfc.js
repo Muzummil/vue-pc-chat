@@ -1557,8 +1557,9 @@ export class WfcManager {
     /**
      * 获取上传链接。一般用户大文件上传。
      */
-    getUploadMediaUrl(fileName, mediaType, successCB, failCB) {
-        impl.getUploadMediaUrl(fileName, mediaType, successCB, failCB);
+    getUploadMediaUrl(fileName, mediaType, contentType, successCB, failCB) {
+        console.log("in wfc", fileName, mediaType, contentType)
+        impl.getUploadMediaUrl(fileName, mediaType, contentType, successCB, failCB);
     }
 
     /**

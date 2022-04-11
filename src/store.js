@@ -870,52 +870,62 @@ let store = {
     },
 
     uploadBigFile(file, mediaType, progressCB, successCB, failCB) {
-        wfc.getUploadMediaUrl(file.name, mediaType, (uploadUrl, remoteUrl, backUploadUrl, serverType) => {
-            let xhr;
-            if (serverType === 1) {
-                // qiniu
-                let ss = uploadUrl.split('?');
-                let url = ss[0];
-                let token = ss[1];
-                let key = ss[2];
-                xhr = this._uploadXMLHttpRequest(file.name, remoteUrl, progressCB, successCB, failCB);
-
-                let formData = new FormData();
-                formData.append('key', key)
-                formData.append('token', token)
-                formData.append(file, file)
-                xhr.open('POST', url);
-                xhr.setRequestHeader("content-disposition", `attachment; filename="${encodeURI(file.name)}"`);
-                xhr.send(formData);
-            } else {
-                // Panda DB专业存储或阿里云
-                xhr = this._uploadXMLHttpRequest(file.name, remoteUrl, progressCB, successCB, failCB);
-                xhr.open('PUT', uploadUrl);
-                xhr.setRequestHeader("content-disposition", `attachment; filename="${encodeURI(file.name)}"`);
-                if (serverType === 1) { //aliyun
-                    xhr.setRequestHeader("content-type", `application/octet-stream`);
+        try{
+            console.log("before calling wfc", file)
+            wfc.getUploadMediaUrl(file.name, mediaType,  `application/octet-stream`, (uploadUrl, remoteUrl, backUploadUrl, serverType) => {
+                let xhr;
+                console.log("serverType",serverType)
+                if (serverType === 1) {
+                    // qiniu
+                    let ss = uploadUrl.split('?');
+                    let url = ss[0];
+                    let token = ss[1];
+                    let key = ss[2];
+                    xhr = this._uploadXMLHttpRequest(file.name, remoteUrl, progressCB, successCB, failCB);
+    
+                    let formData = new FormData();
+                    formData.append('key', key)
+                    formData.append('token', token)
+                    formData.append(file, file)
+                    xhr.open('POST', url);
+                    xhr.setRequestHeader("content-disposition", `attachment; filename="${encodeURI(file.name)}"`);
+                    xhr.send(formData);
+                } else {
+                    // Panda DB专业存储或阿里云
+                    xhr = this._uploadXMLHttpRequest(file.name, remoteUrl, progressCB, successCB, failCB);
+                    xhr.open('PUT', uploadUrl);
+                    xhr.setRequestHeader("content-disposition", `attachment; filename="${encodeURI(file.name)}"`);
+                    if (serverType === 1) { //aliyun
+                        xhr.setRequestHeader("content-type", `application/octet-stream`);
+                    }
+                    xhr.send(file);
                 }
-                xhr.send(file);
-            }
-
-            miscState.uploadBigFiles.push({
-                remoteUrl: remoteUrl,
-                name: file.name,
-                size: file.size,
-                _sizeStr: helper.humanSize(file.size),
-                _fileIconName: helper.getFiletypeIcon(file.name.substring(file.name.lastIndexOf('.'))),
-                status: 1,
-                progress: 0,
-                xhr: xhr,
-            });
-        }, (e) => {
-            console.log('getUploadMediaUrl e', e)
-        })
+    
+                miscState.uploadBigFiles.push({
+                    remoteUrl: remoteUrl,
+                    name: file.name,
+                    size: file.size,
+                    _sizeStr: helper.humanSize(file.size),
+                    _fileIconName: helper.getFiletypeIcon(file.name.substring(file.name.lastIndexOf('.'))),
+                    status: 1,
+                    progress: 0,
+                    xhr: xhr,
+                });
+            }, (e) => {
+                console.log('getUploadMediaUrl e', e)
+            })
+        }catch(e){
+            console.log("catch2",e)
+        }
     },
 
     sendBigFile(conversation, file) {
         console.log('upload and then send big file')
-        this.uploadBigFile(file, 4)
+        try {
+            this.uploadBigFile(file, 4)            
+        } catch (error) {
+            console.log("error", error)
+        }
     },
 
     /**
