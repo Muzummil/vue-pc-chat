@@ -347,7 +347,7 @@ export default {
         },
 
         isNotificationMessage(message) {
-            return message && message.messageContent instanceof NotificationMessageContent && message.messageContent.type !== MessageContentType.RecallMessage_Notification;
+            return message && message.messageContent instanceof NotificationMessageContent;
         },
 
         isRecallNotificationMessage(message) {
