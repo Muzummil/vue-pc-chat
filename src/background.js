@@ -349,14 +349,9 @@ let trayMenu = [
             mainWindow = null;
             global.sharedObj.proto.disconnect(0);
             console.log('--------------- disconnect', global.sharedObj.proto);
-            var now = new Date();
-            var exitTime = now.getTime() + 1000;
-            while (true) {
-                now = new Date();
-                if (now.getTime() > exitTime)
-                    break;
-            }
-            app.exit(0);
+            setTimeout(()=> {
+                app.exit(0);
+            }, 1000);
         }
     }
 ];
@@ -469,7 +464,7 @@ const downloadHandler = (event, item, webContents) => {
                 if (item.isPaused()) {
                     console.log('Download is paused')
                 } else {
-                    console.log(`Received bytes: ${fileName} ${item.getReceivedBytes()}, ${item.getTotalBytes()}`)
+                    // console.log(`Received bytes: ${fileName} ${item.getReceivedBytes()}, ${item.getTotalBytes()}`)
                     let downloadFile = downloadFileMap.get(item.getURL());
                     let messageId = downloadFile.messageId
                     webContents.send('file-download-progress', {
@@ -645,6 +640,11 @@ const createMainWindow = async () => {
 
     ipcMain.on('file-paste', (event) => {
         let args = {hasImage: false};
+
+        if (process.platform === 'linux'){
+            event.returnValue = args;
+            return;
+        }
 
         let foundFiles = false;
         const clipboardEx = require('electron-clipboard-ex')
@@ -1020,6 +1020,7 @@ app.on('before-quit', () => {
     if (!tray) return;
     // if (!isOsx) {
     tray.destroy();
+    tray = null;
     // }
 });
 app.on('activate', e => {
@@ -1029,15 +1030,14 @@ app.on('activate', e => {
 });
 
 function disconnectAndQuit() {
+    global.sharedObj.proto.setConnectionStatusListener(()=>{
+        // 仅仅是为了让渲染进程不收到 ConnectionStatusLogout
+        // do nothing
+    });
     global.sharedObj.proto.disconnect(0);
-    var now = new Date();
-    var exitTime = now.getTime() + 500;
-    while (true) {
-        now = new Date();
-        if (now.getTime() > exitTime)
-            break;
-    }
-    app.quit();
+    setTimeout(()=> {
+        app.quit();
+    }, 1000)
 }
 
 function clearBlink() {
@@ -1070,6 +1070,8 @@ function execBlink(flag, _interval) {
 }
 
 function toggleTrayIcon(icon) {
-    tray.setImage(icon);
+    if (tray){
+        tray.setImage(icon);
+    }
 }
 

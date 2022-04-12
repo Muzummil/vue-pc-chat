@@ -183,14 +183,14 @@ export default {
     margin-top: 30px;
     color: white;
     padding: 10px 40px;
-    background-color: #20fb64;
+    background-color: #3497f1;
     border-radius: 5px;
     border: 1px solid transparent;
     cursor: pointer;
 }
 
 .footer a:active {
-    background-color: red;
+    background-color: #4168e0;
 }
 a.delete-friend{
     margin-left: 2rem;

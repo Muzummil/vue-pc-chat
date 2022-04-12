@@ -21,6 +21,13 @@ export default class CallSession {
     host;
     title;
     desc;
+    /**
+     * 通话附加信息，会议的所有参与者都能看到
+     */
+    callExtra;
+    /**
+     * 本地附加信息，主要用于主窗口向音视频通话窗口传递额外信息
+     */
     extra;
 
     /**
@@ -48,8 +55,18 @@ export default class CallSession {
 
     /**
      * 接听来电
+     * @deprecated  参考{@link answer}
      */
     call () {
+        this.answer(false, null);
+    }
+
+    /**
+     * 接听电话
+     * @param {boolean} audioOnly
+     * @param {string} callExtra 通话附加信息
+     */
+    answer(audioOnly, callExtra) {
     }
 
     /**
@@ -129,10 +146,21 @@ export default class CallSession {
 
     /**
      * 请在callState变为connecting 或 connected之后，调用
+     * @deprecated
      * @param {string} userId
-     * @return {PeerConnectionClient}
+     * @return {Subscriber}
      */
     getPeerConnectionClient(userId){
+        return this.getSubscriber(userId);
+    }
+
+    /**
+     * 请在callState变为connecting 或 connected之后，调用
+     * @param {string} userId
+     * @param {boolean} screenSharing
+     * @return {Subscriber}
+     */
+    getSubscriber(userId, screenSharing){
     }
 
 
@@ -207,11 +235,21 @@ export default class CallSession {
     }
 
     /**
-     * 仅会议时有效
+     * 仅会议版有效
      * 设置视频最大码率
      * @param maxBitrateKbps
      */
     setVideoMaxBitrate(maxBitrateKbps){
+
+    }
+
+    /**
+     * 仅会议版有效
+     * 只支持缩小或者恢复原大小，不支持放大
+     * 相对于原始视频大小按比例缩小分辨率，具体可以参考{@link https://developer.mozilla.org/en-US/docs/Web/API/RTCRtpEncodingParameters/scaleResolutionDownBy}
+     * @param {number} scalingFactor
+     */
+    scaleVideoResolutionDownBy(scalingFactor){
 
     }
 

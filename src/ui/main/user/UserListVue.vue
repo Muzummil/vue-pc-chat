@@ -32,9 +32,11 @@
                         && user._category === sharedContactState.currentFriend._category
                         && user.uid === sharedContactState.currentFriend.uid) || (currentUser && currentUser.uid === user.uid)}"
                                  @click.stop="clickUserItem(user)">
-                                <img class="avatar" :src="user.portrait" alt="">
-                                <span
-                                    class="single-line"> {{ user._displayName || user.displayName }}</span>
+                                <img class="avatar" :src="user.portrait" alt="" @error="imgUrlAlt">
+                                <div style="padding-left: 10px">
+                                    <p class="single-line"> {{  user._displayName || user.displayName }}</p>
+                                    <p v-if="user._userOnlineStatusDesc" class="single-line user-online-status"> {{ user._userOnlineStatusDesc }}</p>
+                                </div>
                             </div>
 
                         </li>
@@ -48,6 +50,7 @@
 <script>
 import store from "@/store";
 import UserCardView from "@/ui/main/user/UserCardView";
+import Config from "../../../config";
 
 export default {
     name: "UserListVue",
@@ -106,6 +109,9 @@ export default {
         },
         closeUserCard(user) {
             this.$refs["userCardTippy-" + user.uid][0]._tippy.hide();
+        },
+        imgUrlAlt(e){
+            e.target.src = Config.DEFAULT_PORTRAIT_URL;
         }
 
     },
@@ -224,6 +230,11 @@ ul {
 
 .contact-item .content:active {
     background-color: #d6d6d6;
+}
+
+.user-online-status {
+    color: gray;
+    font-size: 10px;
 }
 
 /*.contact-item .content:hover {*/
