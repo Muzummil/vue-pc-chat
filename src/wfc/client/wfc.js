@@ -29,11 +29,12 @@ export class WfcManager {
      * 初始化，请参考本demo的用法
      * 只可以在主窗口调用，其他窗口调用之后，会导致主窗口通知失效。
      * 如果其他窗口想调用wfc里面的非通知方法，可以参考{@link attach}
-     * @param {[]} args，当采用script标签的方式引入，可传入Config配置对象，配置项，请参考{@link Config}
+     * @param {[]} args，pc 时，传入[node实例]; web 时，可以传入Config配置对象，配置项，请参考{@link Config}
      */
     init(args = []) {
         impl.init(args);
         avenginekit.setup(self);
+        //self.setProxyInfo("", "192.168.1.80", 1080, "", "");
     }
 
     /**
@@ -70,6 +71,19 @@ export class WfcManager {
      */
     connect(userId, token) {
         impl.connect(userId, token);
+    }
+
+    /**
+     * 设置代理，只支持socks5代理
+     *
+     * @param {String} host       代理host，host和ip必须至少有一个。
+     * @param {String} ip         代理IP，host和ip必须至少有一个。
+     * @param {number} port       代理端口
+     * @param {String} username   username
+     * @param {String} password   password
+     */
+    setProxyInfo(host, ip, port, username, password) {
+        impl.setProxyInfo(host, ip, port, username, password);
     }
 
     /**
@@ -238,7 +252,7 @@ export class WfcManager {
     /**
      * 获取用户信息
      * @param {string} userId 用户id
-     * @param {boolean} refresh 是否刷新用户信息，如果刷新的话，且用户信息有更新，会通过{@link eventEmitter}通知
+     * @param {boolean} refresh 是否刷新用户信息，如果刷新的话，且用户信息有更新，会通过{@link eventEmitter}进行通知，事件的名字是{@link EventType.UserInfosUpdate }
      * @param {string} groupId
      * @returns {UserInfo}
      */
@@ -253,8 +267,8 @@ export class WfcManager {
     /**
      * 获取用户信息
      * @param {string} userId 用户ID
-     * @param {boolean} refresh 是否强制从服务器更新，如果本地没有或者强制，会从服务器刷新，然后发出通知UserInfosUpdate
-     * @param {function (UserInfo)} success 成功回调
+     * @param {boolean} refresh 是否强制从服务器更新，如果本地没有或者强制，会从服务器刷新
+     * @param {function (UserInfo)} success 成功回调，如果本地有该用户信息，则通过回调返回本地的用户信息；如果本地没有，则从服务端拉取该用户信息，并通过回调返回
      * @param {function (number)} fail 失败回调
      */
     getUserInfoEx(userId, refresh, success, fail) {
@@ -1288,6 +1302,20 @@ export class WfcManager {
     }
 
     /**
+     * 获取会话的远程历史消息，仅 web 有效
+     * @param {Conversation} conversation 目标会话
+     * @param {[number]} contentTypes 消息类型列表，可选值参考{@link MessageContentType}
+     * @param {number | Long} beforeUid 消息uid，表示拉取本条消息之前的消息
+     * @param {number} count
+     * @param {boolean} filterLocalMessage 是否过滤本地已经存在的消息
+     * @param {function ([Message])} successCB
+     * @param failCB
+     */
+    loadRemoteConversationMessagesEx(conversation, contentTypes, beforeUid, count, filterLocalMessage, successCB, failCB){
+        impl.loadRemoteMessages(conversation, contentTypes, beforeUid, count, successCB, failCB, filterLocalMessage);
+    }
+
+    /**
      * 根据会话线路，获取远程历史消息
      * @param {number} line 会话线路
      * @param {number | Long} beforeUid 消息uid，表示拉取本条消息之前的消息
@@ -1295,8 +1323,32 @@ export class WfcManager {
      * @param {function ([Message])} successCB
      * @param failCB
      */
-    loadRemoteLineMessages(line, beforeUid, count, successCB, failCB) {
-        impl.loadRemoteLineMessages(line, beforeUid, count, successCB, failCB)
+    loadRemoteLineMessages(line, contentTypes, beforeUid, count, successCB, failCB){
+        impl.loadRemoteLineMessages(line, contentTypes, beforeUid, count, successCB, failCB)
+    }
+
+    /**
+     * 根据会话线路，获取远程历史消息，仅 web 端有效
+     * @param {number} line 会话线路
+     * @param {number | Long} beforeUid 消息uid，表示拉取本条消息之前的消息
+     * @param {[number]} contentTypes 消息类型列表，可选值参考{@link MessageContentType}
+     * @param {number} count
+     * @param {boolean} filterLocalMessage 是否过滤本地已经存在的消息
+     * @param {function ([Message])} successCB
+     * @param failCB
+     */
+    loadRemoteLineMessages(line, contentTypes, beforeUid, count, filterLocalMessage, successCB, failCB){
+        impl.loadRemoteLineMessages(line, contentTypes, beforeUid, count, successCB, failCB, filterLocalMessage)
+    }
+
+    /**
+     * 根据消息 uid，获取远程消息
+     * @param {Long} messageUid 消息uid
+     * @param {function ([Message])} successCB
+     * @param failCB
+     */
+    loadRemoteMessage(messageUid, successCB, failCB){
+        impl.loadRemoteMessage(messageUid, successCB, failCB);
     }
 
     /**
@@ -1334,7 +1386,7 @@ export class WfcManager {
      * @param {boolean} desc 逆序排列
      * @param {int} limit 返回数量
      * @param {int} offset 偏移
-     * @returns {[Message]}
+     * @returns {Message[]}
      */
     searchMessageEx(conversation, keyword, desc, limit, offset) {
         return impl.searchMessageEx(conversation, keyword, desc, limit, offset);
@@ -1348,10 +1400,26 @@ export class WfcManager {
      * @param {boolean} desc 逆序排列
      * @param {int} limit 返回数量
      * @param {int} offset 偏移
-     * @returns {[Message]}
+     * @returns {Message[]}
      */
     searchMessageByTypes(conversation, keyword, contentTypes, desc, limit, offset) {
         return impl.searchMessageByTypes(conversation, keyword, contentTypes, desc, limit, offset);
+    }
+
+    /**
+     * 搜索消息
+     * @param {Conversation} conversation 目标会话，如果为空搜索所有会话
+     * @param {string} keyword 关键字
+     * @param {[number]} contentTypes 消息类型列表，可选值参考{@link MessageContentType}
+     * @param {Long} 消息起始时间，如果为0，则忽略起始时间。
+     * @param {Long} 消息结束时间，如果为0，测忽略结束时间。
+     * @param {boolean} desc 逆序排列
+     * @param {int} limit 返回数量
+     * @param {int} offset 偏移
+     * @returns {Message[]}
+     */
+    searchMessageByTypesAndTimes(conversation, keyword, contentTypes, startTime, endTime, desc, limit, offset) {
+        return impl.searchMessageByTypesAndTimes(conversation, keyword, contentTypes, startTime, endTime, desc, limit, offset);
     }
 
     /**
@@ -1362,7 +1430,7 @@ export class WfcManager {
      * @param {string} keyword 关键字
      * @param {number} fromIndex messageId，表示从那一条消息开始获取
      * @param {boolean} desc 逆序排列
-     * @param {int} count 最大数量
+     * @param {number} count 最大数量
      * @returns {[Message]}
      */
     searchMessageEx2(conversationTypes, lines, contentTypes, keyword, fromIndex, desc, count) {
@@ -1516,7 +1584,7 @@ export class WfcManager {
     /**
      * 更新消息状态
      * @param {number} messageId 消息id
-     * @param {MessageStatus} 消息状态，可选值参考{@link MessageStatus}
+     * @param {MessageStatus} status 消息状态，可选值参考{@link MessageStatus}
      */
     async updateMessageStatus(messageId, status) {
         impl.updateMessageStatus(messageId, status);
@@ -1554,9 +1622,14 @@ export class WfcManager {
         return impl.isSupportBigFilesUpload();
     }
 
-    /**
-     * 获取上传链接。一般用户大文件上传。
-     */
+   /**
+    * 获取上传链接。一般用户大文件上传。
+    * @param {string} fileName
+    * @param {number} mediaType 媒体类型，可选值参考{@link MessageContentMediaType}
+    * @param {string} contentType HTTP请求的ContentType header，为空时默认为"application/octet-stream"
+    * @param {function (string, string)} successCB 回调通知上传成功之后的url
+    * @param {function (number)} failCB
+    */
     getUploadMediaUrl(fileName, mediaType, contentType, successCB, failCB) {
         console.log("in wfc", fileName, mediaType, contentType)
         impl.getUploadMediaUrl(fileName, mediaType, contentType, successCB, failCB);
@@ -1651,23 +1724,25 @@ export class WfcManager {
      * @param {Conversation} conversation 会话
      * @param {String} fromUser 来源用户
      * @param {Long} beforeMessageUid 消息uid，表示获取此消息uid之前的文件记录
+     * @param {int} order 排序。0 按照时间逆序；1 按照时间顺序；2 按照大小逆序；3 按照大小顺序。
      * @param {number} count 数量
-     * @param {function ([FileRecord])} successCB 成功回调
+     * @param {function (FileRecord[])} successCB 成功回调
      * @param {function (number)} failCB 失败回调
      */
-    getConversationFileRecords(conversation, fromUser, beforeMessageUid, count, successCB, failCB) {
-        impl.getConversationFileRecords(conversation, fromUser, beforeMessageUid, count, successCB, failCB);
+    getConversationFileRecords(conversation, fromUser, beforeMessageUid, order, count, successCB, failCB) {
+        impl.getConversationFileRecords(conversation, fromUser, beforeMessageUid, order, count, successCB, failCB);
     }
 
     /**
      * 获取我发送的文件记录
      * @param {Long} beforeMessageUid 消息uid，表示获取此消息uid之前的文件记录
+     * @param {int} order 排序。0 按照时间逆序；1 按照时间顺序；2 按照大小逆序；3 按照大小顺序。
      * @param {number} count 数量
-     * @param {function ([FileRecord])} successCB 成功回调
+     * @param {function (FileRecord[])} successCB 成功回调
      * @param {function (number)} failCB 失败回调
      */
-    getMyFileRecords(beforeMessageUid, count, successCB, failCB) {
-        impl.getMyFileRecords(beforeMessageUid, count, successCB, failCB);
+    getMyFileRecords(beforeMessageUid, order, count, successCB, failCB) {
+        impl.getMyFileRecords(beforeMessageUid, order, count, successCB, failCB);
     }
 
     /**
@@ -1686,24 +1761,26 @@ export class WfcManager {
      * @param {Conversation} conversation 会话，如果为空则获取当前用户所有收到和发出的文件记录
      * @param {string} fromUser 文件发送用户，如果为空则获取该用户发出的文件记录
      * @param {Long | string} beforeMessageId 起始消息的消息id
+     * @param {int} order 排序。0 按照时间逆序；1 按照时间顺序；2 按照大小逆序；3 按照大小顺序。
      * @param {number} count
-     * @param {function ([fileRecord])} successCB
+     * @param {function (FileRecord[])} successCB
      * @param {function (number)} failCB
      */
-    searchFiles(keyword, conversation, fromUser, beforeMessageId, count, successCB, failCB) {
-        impl.searchFiles(keyword, conversation, fromUser, beforeMessageId, count, successCB, failCB)
+    searchFiles(keyword, conversation, fromUser, beforeMessageId, order, count, successCB, failCB) {
+        impl.searchFiles(keyword, conversation, fromUser, beforeMessageId, order, count, successCB, failCB)
     }
 
     /**
      * 搜索我自己的远程文件记录
      * @param keyword
      * @param beforeMessageUid
+     * @param {int} order 排序。0 按照时间逆序；1 按照时间顺序；2 按照大小逆序；3 按照大小顺序。
      * @param count
      * @param successCB
      * @param failCB
      */
-    searchMyFiles(keyword, beforeMessageUid, count, successCB, failCB) {
-        impl.searchMyFiles(keyword, beforeMessageUid, count, successCB, failCB);
+    searchMyFiles(keyword, beforeMessageUid, order, count, successCB, failCB) {
+        impl.searchMyFiles(keyword, beforeMessageUid, order, count, successCB, failCB);
     }
 
     /**
@@ -1752,9 +1829,39 @@ export class WfcManager {
         impl.sendConferenceRequest(sessionId, roomId, request, data, advance, callback);
     }
 
+    isUserOnlineStateEnabled(){
+        return impl.isUserOnlineStateEnabled();
+    }
+
+    /**
+     *
+     * @param {number} type 会话类型， 支持{@link ConversationType.Single}和{@link ConversationType.Group}
+     * @param {string[]} targets 会话类型为单聊时，是用户 id列表；会话类型为群组时，是群组 id 列表
+     * @param {number} duration 关注时间长度，单位是秒
+     * @param {function(UserOnlineState[])} successCB
+     * @param {function(number)} failCB
+     */
+    watchOnlineState(type, targets, duration, successCB, failCB){
+        impl.watchOnlineState(type, targets, duration, successCB, failCB);
+    }
+
+    unwatchOnlineState(type, targets, successCB, failCB){
+        impl.unwatchOnlineState(type, targets, successCB, failCB);
+    }
+
+    setMyCustomState(customState, customText, successCB, failCB){
+        impl.setMyCustomState(customState, customText, successCB, failCB)
+    }
+
     _getStore() {
         return impl._getStore();
     }
+
+
+    _getStore() {
+        return impl._getStore();
+    }
+
 
     /**
      * 内部使用，electron主窗口之外的，其他窗口，attach到主窗口初始化的proto上，可以调用get相关方法，但没有通知

@@ -75,6 +75,9 @@
             v-on:cancelQuoteMessage="cancelQuoteMessage"
             :enable-message-preview="false"
             :quoted-message="quotedMessage" :show-close-button="true"/>
+        <div v-if="muted" style="width: 100%; height: 100%; background: lightgrey; position: absolute; display: flex; justify-content: center; align-items: center">
+            <p style="color: white">群禁言或者你被禁言</p>
+        </div>
     </section>
 </template>
 
@@ -89,7 +92,6 @@ import '../../../tribute.css'
 import ConversationType from "@/wfc/model/conversationType";
 import ConversationInfo from "@/wfc/model/conversationInfo";
 import GroupInfo from "@/wfc/model/groupInfo";
-import GroupType from "@/wfc/model/groupType";
 import GroupMemberType from "@/wfc/model/groupMemberType";
 import QuoteInfo from "@/wfc/model/quoteInfo";
 import Draft from "@/ui/util/draft";
@@ -136,15 +138,21 @@ export default {
         }
     },
     methods: {
+        onTributeReplaced(e) {
+            // 正常下面这两行应当就生效了，不知道为啥不生效，所以采用了后面的 trick
+            e.detail.event.preventDefault();
+            e.detail.event.stopPropagation();
+
+            this.tributeReplaced = true;
+        },
         canisend() {
             let target = this.conversationInfo.conversation._target;
             if (target instanceof GroupInfo) {
                 let groupInfo = target;
-                if (groupInfo.type === GroupType.Restricted) {
-                    let groupMember = wfc.getGroupMember(groupInfo.target, wfc.getUserId());
-                    if (groupInfo.mute === 1 && groupMember.type === GroupMemberType.Normal) {
-                        return false;
-                    }
+                let groupMember = wfc.getGroupMember(groupInfo.target, wfc.getUserId());
+                if (groupInfo.mute === 1) {
+                    return [GroupMemberType.Owner, GroupMemberType.Manager, GroupMemberType.Allowed].indexOf(groupMember.type) >= 0
+                        || groupMember.type === GroupMemberType.Allowed;
                 }
             }
 
@@ -165,13 +173,16 @@ export default {
             }
             if (text && text.trim()) {
                 document.execCommand('insertText', false, text);
+                // Safari 浏览器 execCommand 失效，可以采用下面这种方式处理粘贴
+                // this.$refs.input.innerText += text;
                 return;
             }
             if (isElectron()) {
                 let args = ipcRenderer.sendSync('file-paste');
                 if (args.hasImage) {
+                    document.execCommand('insertText', false, ' ');
                     document.execCommand('insertImage', false, 'local-resource://' + args.filename);
-                }else if (args.hasFile){
+                } else if (args.hasFile) {
                     args.files.forEach(file => {
                         store.sendFile(this.conversationInfo.conversation, file)
                     })
@@ -179,7 +190,7 @@ export default {
             }
         },
 
-        mention(groupId, memberId){
+        mention(groupId, memberId) {
             let displayName = wfc.getGroupMemberDisplayName(groupId, memberId);
             this.mentions.push({
                 key: displayName,
@@ -187,12 +198,17 @@ export default {
             })
             let text = this.$refs.input.innerText;
             let mentionValue;
-            if (text.endsWith(' ')){
+            if (text.endsWith(' ')) {
                 mentionValue = '@' + displayName + ' ';
-            }else {
+            } else {
                 mentionValue = ' @' + displayName + ' ';
             }
             document.execCommand('insertText', false, mentionValue);
+        },
+
+        insertText(text) {
+            // this.$refs['input'].innerText = text;
+            document.execCommand('insertText', false, text);
         },
 
         copy() {
@@ -486,6 +502,16 @@ export default {
             //   showMessage('Send file not allowed to exceed 100M.');
             //   return false;
             // }
+            if (isElectron()) {
+                if (new Date().getTime() - file.lastModified < 30 * 1000 && file.path.indexOf('/var/folders') === 0) {
+                    console.log('not support file', file)
+                    this.$notify({
+                        text: ' 不支持的文件类型',
+                        type: 'warn'
+                    });
+                    return;
+                }
+            }
             this.$eventBus.$emit('uploadFile', file)
             store.sendFile(this.conversationInfo.conversation, file);
             store.setShouldAutoScrollToBottom(true)
@@ -631,6 +657,7 @@ export default {
                 .replace(/&nbsp;/g, ' ')
                 .replace(/<img class="emoji" draggable="false" alt="/g, '')
                 .replace(/" src="https:\/\/static\.wildfirechat\.net\/twemoji\/assets\/72x72\/[0-9a-z-]+\.png">/g, '')
+                .replace(/<img src="local-resource:.*">/g, '')
                 .trimStart()
                 .replace(/\s+$/g, ' ')
             ;
@@ -676,7 +703,7 @@ export default {
             }
         },
 
-        onGroupMembersUpdate(groupId) {
+        onGroupMembersUpdate(groupId, groupMembers) {
             console.log('messageInput onGroupMembersUpdate', groupId)
             if (this.conversationInfo
                 && this.conversationInfo.conversation.type === ConversationType.Group
@@ -760,7 +787,20 @@ export default {
         hasInputTextOrImage() {
             // TODO 监听input的输入情况
             return true;
-        }
+        },
+        muted() {
+            let target = this.conversationInfo.conversation._target;
+            if (target instanceof GroupInfo) {
+                let groupInfo = target;
+                let groupMember = wfc.getGroupMember(groupInfo.target, wfc.getUserId());
+                if (groupInfo.mute === 1) {
+                    return [GroupMemberType.Owner, GroupMemberType.Manager, GroupMemberType.Allowed].indexOf(groupMember.type) < 0;
+                } else {
+                    return groupMember.type === GroupMemberType.Muted;
+                }
+            }
+            return false;
+        },
     },
 
     components: {

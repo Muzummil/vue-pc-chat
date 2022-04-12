@@ -26,6 +26,11 @@ export default {
         message: {
             type: Message,
             required: true,
+        },
+        isInCompositeView:{
+            default: false,
+            type: Boolean,
+            required: false,
         }
     },
     data() {

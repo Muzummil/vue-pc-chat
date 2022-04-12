@@ -173,6 +173,7 @@ import ClickOutside from 'vue-click-outside'
 import NormalOutMessageContentView from "@/ui/main/conversation/message/NormalOutMessageContentContainerView";
 import NormalInMessageContentView from "@/ui/main/conversation/message/NormalInMessageContentContainerView";
 import NotificationMessageContentView from "@/ui/main/conversation/message/NotificationMessageContentView";
+import RecallNotificationMessageContentView from "@/ui/main/conversation/message/RecallNotificationMessageContentView";
 import NotificationMessageContent from "@/wfc/messages/notification/notificationMessageContent";
 import TextMessageContent from "@/wfc/messages/textMessageContent";
 import store from "@/store";
@@ -208,6 +209,7 @@ export default {
     components: {
         MultiSelectActionView,
         NotificationMessageContentView,
+        RecallNotificationMessageContentView,
         NormalInMessageContentView,
         NormalOutMessageContentView,
         MessageInputView,
@@ -345,7 +347,15 @@ export default {
         },
 
         isNotificationMessage(message) {
-            return message && message.messageContent instanceof NotificationMessageContent;
+            return message && message.messageContent instanceof NotificationMessageContent && message.messageContent.type !== MessageContentType.RecallMessage_Notification;
+        },
+
+        isRecallNotificationMessage(message) {
+            return message && message.messageContent.type === MessageContentType.RecallMessage_Notification;
+        },
+
+        reedit(message) {
+            this.$refs.messageInputView.insertText(message.messageContent.originalSearchableContent);
         },
         checkShowScrollBtn() {
             let messageListContainerElement = this.$refs['conversationMessageList'];
@@ -478,7 +488,9 @@ export default {
                         return true;
                     }
                 }
-                if (message.direction === 0 && new Date().getTime() - numberValue(message.timestamp) < 60 * 1000) {
+                let delta = wfc.getServerDeltaTime();
+                let now = new Date().getTime();
+                if (message.direction === 0 && now - (numberValue(message.timestamp) - delta) < 60 * 1000) {
                     return true;
                 }
             }
@@ -565,7 +577,7 @@ export default {
                 downloadFile(message);
             } else {
                 if (!store.isDownloadingMessage(message.messageId)) {
-                    downloadFile(this.message)
+                    downloadFile(message)
                     store.addDownloadingMessage(message.messageId)
                 } else {
                     // TODO toast 下载中
@@ -779,7 +791,7 @@ export default {
             }
         },
         mentionMessageSenderTitle(message) {
-            if (!message){
+            if (!message) {
                 return ''
             }
             let displayName = wfc.getGroupMemberDisplayName(message.conversation.target, message.from);
@@ -928,6 +940,10 @@ export default {
         conversationTitle() {
             let info = this.sharedConversationState.currentConversationInfo;
             return info.conversation._target._displayName;
+        },
+        targetUserOnlineStateDesc() {
+            let info = this.sharedConversationState.currentConversationInfo;
+            return info.conversation._targetOnlineStateDesc;
         },
         loadingIdentifier() {
             let conversation = this.sharedConversationState.currentConversationInfo.conversation;
@@ -1097,6 +1113,11 @@ export default {
     height: 3px;
     border-top: 1px solid #e2e2e2;
     margin: 0 auto;
+}
+
+.user-online-status {
+    color: gray;
+    font-size: 10px;
 }
 
 .message-input-container {

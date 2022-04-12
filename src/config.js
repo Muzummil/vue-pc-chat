@@ -37,7 +37,6 @@ export default class Config {
     // 本服务传入amr音频文件的地址，将音频文件转换为mp3格式，并以application/octet-stream的格式返回
     // 如果语音消息很多，建议使用cdn
     static AMR_TO_MP3_SERVER_ADDRESS = Config.APP_SERVER + '/amr2mp3?path=';
-
     // 文件传输助手ID
     static FILE_HELPER_ID = 'wfc_file_transfer';
 
