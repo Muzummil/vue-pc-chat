@@ -61,7 +61,7 @@
                     </infinite-loading>
                     <ul>
                         <li v-for="(message) in sharedConversationState.currentConversationMessageList"
-                            :key="message.messageId" :id="message.messageId">
+                            :key="getMessageUid(message)" :id="message.messageId">
                             <template v-if="message.messageId > 0">
                                 <!-- {{message.messageId}} AAA -->
                                 <!--todo 不同的消息类型 notification in out-->
@@ -692,6 +692,9 @@ export default {
                 console.log('complete')
                 $state.complete()
             });
+        },
+        getMessageUid(message){
+            return stringValue(message.messageUid);
         },
 
         pickConversationAndForwardMessage(forwardType, messages) {
